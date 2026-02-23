@@ -12,37 +12,18 @@ if (session_status() == PHP_SESSION_NONE) {
 $action = isset($_GET['action']) ? $_GET['action'] : 'login';
 
 switch($action) {
+    // Auth routes
     case 'login':
-        // Show login page
         require_once 'views/auth/login.php';
         break;
         
     case 'authenticate':
-        // Process login
         require_once 'controllers/AuthController.php';
         $auth = new AuthController();
         $error = $auth->login($_POST['username'], $_POST['password']);
         if($error) {
             require_once 'views/auth/login.php';
         }
-        break;
-        
-    case 'dashboard':
-        require_once 'controllers/DashboardController.php';
-        $dashboard = new DashboardController();
-        $dashboard->index();
-        break;
-        
-    case 'profile':
-        require_once 'controllers/UserController.php';
-        $user = new UserController();
-        $user->profile();
-        break;
-        
-    case 'users':
-        require_once 'controllers/UserController.php';
-        $user = new UserController();
-        $user->list();
         break;
         
     case 'logout':
@@ -50,88 +31,15 @@ switch($action) {
         $auth = new AuthController();
         $auth->logout();
         break;
-        
-    default:
-        // 404 page
-        header("HTTP/1.0 404 Not Found");
-        echo "Page not found";
-        break;
-
-        // Add these cases to your existing switch statement
-case 'tasks':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->index();
-    break;
     
-case 'create_task':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->create();
-    break;
-    
-case 'update_status':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->updateStatus();
-    break;
-    
-case 'view_task':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->view($_GET['id']);
-    break;
-}
-?>
-
-
-<?php
-// Enable error reporting for development
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Start session - only once here
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Simple router
-$action = isset($_GET['action']) ? $_GET['action'] : 'login';
-
-switch($action) {
-    case 'login':
-        // Show login page
-        require_once 'views/auth/login.php';
-        break;
-        
-    case 'authenticate':
-        // Process login
-        require_once 'controllers/AuthController.php';
-        $auth = new AuthController();
-        $error = $auth->login($_POST['username'], $_POST['password']);
-        if($error) {
-            require_once 'views/auth/login.php';
-        }
-        break;
-        
+    // Dashboard routes
     case 'dashboard':
         require_once 'controllers/TaskController.php';
         $taskController = new TaskController();
         $taskController->dashboard();
         break;
-        
-    case 'profile':
-        require_once 'controllers/UserController.php';
-        $user = new UserController();
-        $user->profile();
-        break;
-        
-    case 'users':
-        require_once 'controllers/UserController.php';
-        $user = new UserController();
-        $user->list();
-        break;
-        
+    
+    // Task routes
     case 'tasks':
         require_once 'controllers/TaskController.php';
         $taskController = new TaskController();
@@ -161,59 +69,81 @@ switch($action) {
         $taskController = new TaskController();
         $taskController->view($_GET['id']);
         break;
+    
+    // User routes
+    case 'profile':
+        require_once 'controllers/UserController.php';
+        $userController = new UserController();
+        $userController->profile();
+        break;
         
-    case 'logout':
-        require_once 'controllers/AuthController.php';
-        $auth = new AuthController();
-        $auth->logout();
+    case 'users':
+        require_once 'controllers/UserController.php';
+        $userController = new UserController();
+        $userController->list();
+        break;
+
+    case 'create_user':
+        require_once 'controllers/UserController.php';
+        $userController = new UserController();
+        $userController->create();
+        break;
+
+    case 'store_user':
+        require_once 'controllers/UserController.php';
+        $userController = new UserController();
+        $userController->store();
+        break;
+
+    case 'edit_user':
+        require_once 'controllers/UserController.php';
+        $userController = new UserController();
+        $userController->edit($_GET['id']);
+        break;
+
+    case 'update_user':
+        require_once 'controllers/UserController.php';
+        $userController = new UserController();
+        $userController->update();
+        break;
+
+    case 'delete_user':
+        require_once 'controllers/UserController.php';
+        $userController = new UserController();
+        $userController->delete();
+        break;
+    
+    // Unit routes
+    case 'units':
+        require_once 'controllers/UnitController.php';
+        $unitController = new UnitController();
+        $unitController->index();
+        break;
+
+    case 'store_unit':
+        require_once 'controllers/UnitController.php';
+        $unitController = new UnitController();
+        $unitController->store();
+        break;
+
+    case 'update_unit':
+        require_once 'controllers/UnitController.php';
+        $unitController = new UnitController();
+        $unitController->update();
+        break;
+
+    case 'delete_unit':
+        require_once 'controllers/UnitController.php';
+        $unitController = new UnitController();
+        $unitController->delete();
         break;
         
     default:
         // 404 page
         header("HTTP/1.0 404 Not Found");
-        echo "Page not found";
+        echo "<h1>Page Not Found</h1>";
+        echo "<p>The requested action '".htmlspecialchars($action)."' does not exist.</p>";
+        echo '<p><a href="index.php?action=dashboard">Go to Dashboard</a></p>';
         break;
-
-        case 'users':
-    require_once 'controllers/UserController.php';
-    $userController = new UserController();
-    $userController->list();
-    break;
-
-case 'create_user':
-    require_once 'controllers/UserController.php';
-    $userController = new UserController();
-    $userController->create();
-    break;
-
-case 'store_user':
-    require_once 'controllers/UserController.php';
-    $userController = new UserController();
-    $userController->store();
-    break;
-
-case 'edit_user':
-    require_once 'controllers/UserController.php';
-    $userController = new UserController();
-    $userController->edit($_GET['id']);
-    break;
-
-case 'update_user':
-    require_once 'controllers/UserController.php';
-    $userController = new UserController();
-    $userController->update();
-    break;
-
-case 'delete_user':
-    require_once 'controllers/UserController.php';
-    $userController = new UserController();
-    $userController->delete();
-    break;
-
-case 'profile':
-    require_once 'controllers/UserController.php';
-    $userController = new UserController();
-    $userController->profile();
-    break;
 }
 ?>
