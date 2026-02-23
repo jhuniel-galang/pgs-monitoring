@@ -68,35 +68,47 @@ class TaskController {
 }
 
     public function create() {
-        $user = $this->auth->getCurrentUser();
-        
-        // Only admin can create tasks
-        if($user['role'] != 'admin') {
-            header("Location: index.php?action=tasks&error=Unauthorized access");
+    $user = $this->auth->getCurrentUser();
+    
+    // Only admin can create tasks
+    if($user['role'] != 'admin') {
+        $_SESSION['error'] = "Unauthorized access";
+        header("Location: index.php?action=tasks");
+        exit();
+    }
+    
+    if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Validate input
+        if(empty($_POST['task_details']) || empty($_POST['functional_division']) || 
+           empty($_POST['unit_id']) || empty($_POST['target_completion_date'])) {
+            $_SESSION['error'] = "All fields are required";
+            header("Location: index.php?action=tasks");
             exit();
         }
         
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'task_details' => $_POST['task_details'],
-                'unit_id' => $_POST['unit_id'],
-                'functional_division' => $_POST['functional_division'],
-                'target_completion_date' => $_POST['target_completion_date'],
-                'priority' => $_POST['priority'],
-                'created_by' => $_SESSION['user_id']
-            ];
-            
-            if($this->task->createTask($data)) {
-                header("Location: index.php?action=tasks&msg=Task created successfully");
-                exit();
-            } else {
-                $error = "Failed to create task";
-            }
+        $data = [
+            'task_details' => $_POST['task_details'],
+            'unit_id' => $_POST['unit_id'],
+            'functional_division' => $_POST['functional_division'],
+            'target_completion_date' => $_POST['target_completion_date'],
+            'priority' => $_POST['priority'] ?? 'medium',
+            'created_by' => $_SESSION['user_id']
+        ];
+        
+        if($this->task->createTask($data)) {
+            $_SESSION['success'] = "Task created successfully";
+        } else {
+            $_SESSION['error'] = "Failed to create task";
         }
         
-        $units = $this->unit->getAllUnits();
-        require_once __DIR__ . '/../views/tasks/create.php';
+        header("Location: index.php?action=tasks");
+        exit();
     }
+    
+    // If not POST request, show the create page
+    $units = $this->unit->getAllUnits();
+    require_once __DIR__ . '/../views/tasks/create.php';
+}
 
     public function updateStatus() {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {

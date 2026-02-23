@@ -173,5 +173,47 @@ switch($action) {
         header("HTTP/1.0 404 Not Found");
         echo "Page not found";
         break;
+
+        case 'users':
+    require_once 'controllers/UserController.php';
+    $userController = new UserController();
+    $userController->list();
+    break;
+
+case 'create_user':
+    require_once 'controllers/UserController.php';
+    $userController = new UserController();
+    $userController->create();
+    break;
+
+case 'store_user':
+    require_once 'controllers/UserController.php';
+    $userController = new UserController();
+    $userController->store();
+    break;
+
+case 'edit_user':
+    require_once 'controllers/UserController.php';
+    $userController = new UserController();
+    $userController->edit($_GET['id']);
+    break;
+
+case 'update_user':
+    require_once 'controllers/UserController.php';
+    $userController = new UserController();
+    $userController->update();
+    break;
+
+case 'delete_user':
+    require_once 'controllers/UserController.php';
+    $userController = new UserController();
+    $userController->delete();
+    break;
+
+case 'profile':
+    require_once 'controllers/UserController.php';
+    $userController = new UserController();
+    $userController->profile();
+    break;
 }
 ?>
