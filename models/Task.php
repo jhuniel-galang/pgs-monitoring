@@ -58,10 +58,12 @@ class Task extends DatabaseModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getTaskById($task_id) {
+   public function getTaskById($task_id) {
     $query = "SELECT t.*, 
               GROUP_CONCAT(DISTINCT u.unit_name SEPARATOR ', ') as unit_names,
-              (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) as current_percentage
+              (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) as current_percentage,
+              (SELECT remarks FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) as latest_remarks,
+              (SELECT update_date FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) as last_update
               FROM " . $this->table . " t
               LEFT JOIN tbl_task_units tu ON t.task_id = tu.task_id
               LEFT JOIN tbl_units u ON tu.unit_id = u.id
@@ -311,7 +313,7 @@ public function createTaskWithUnits($data, $unit_ids = []) {
     $this->getConnection()->beginTransaction();
     
     try {
-        // Insert task - Note: column name is 'functional_division' not 'functional_direction'
+        // Insert task - column name is 'functional_division' 
         $query = "INSERT INTO tbl_task 
                   (task_details, project_id, functional_division, 
                    target_completion_date, priority, budget_allocation, created_by) 
@@ -324,7 +326,7 @@ public function createTaskWithUnits($data, $unit_ids = []) {
         $success = $stmt->execute([
             ':task_details' => $data['task_details'],
             ':project_id' => $data['project_id'] ?? null,
-            ':functional_division' => $data['functional_division'] ?? $data['functional_division'], // Handle both possible keys
+            ':functional_division' => $data['functional_division'], // Make sure this key exists
             ':target_completion_date' => $data['target_completion_date'] ?? null,
             ':priority' => $data['priority'] ?? 'medium',
             ':budget_allocation' => $data['budget_allocation'] ?? 0,
@@ -347,6 +349,7 @@ public function createTaskWithUnits($data, $unit_ids = []) {
         
     } catch (Exception $e) {
         $this->getConnection()->rollBack();
+        error_log("Error creating task: " . $e->getMessage());
         return ['success' => false, 'message' => 'Failed to create task: ' . $e->getMessage()];
     }
 }

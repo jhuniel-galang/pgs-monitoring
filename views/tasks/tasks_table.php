@@ -21,6 +21,14 @@
                 // Determine the correct task ID field
                 $taskId = $task['task_id'] ?? $task['id'] ?? 0;
                 if(!$taskId) continue; // Skip if no ID
+                
+                // Determine if user can update this task
+                $canUpdate = false;
+                if($_SESSION['role'] == 'admin') {
+                    $canUpdate = true;
+                } elseif($_SESSION['role'] == 'encoder' && isset($task['functional_division']) && $task['functional_division'] == $_SESSION['functional_division']) {
+                    $canUpdate = true;
+                }
             ?>
             <tr>
                 <td><?php echo htmlspecialchars(substr($task['task_details'] ?? '', 0, 50)) . '...'; ?></td>
@@ -28,7 +36,8 @@
                     <?php if(isset($task['functional_division'])): ?>
                     <span class="badge bg-<?php 
                         echo $task['functional_division'] == 'OSDS' ? 'primary' : 
-                            ($task['functional_division'] == 'CID' ? 'success' : 'info'); 
+                            ($task['functional_division'] == 'CID' ? 'success' : 
+                            ($task['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
                     ?>">
                         <?php echo $task['functional_division']; ?>
                     </span>
@@ -84,25 +93,11 @@
                         <a href="index.php?action=view_task&id=<?php echo $taskId; ?>" 
                            class="btn btn-sm btn-info">View</a>
                         
-                        <?php 
-                        // Check if user can update this task
-                        $canUpdate = false;
-                        if(isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
-                            $canUpdate = true;
-                        } elseif(isset($_SESSION['role']) && $_SESSION['role'] == 'encoder' 
-                                && isset($_SESSION['functional_division']) 
-                                && isset($task['functional_division'])
-                                && $_SESSION['functional_division'] == $task['functional_division']) {
-                            $canUpdate = true;
-                        }
-                        
-                        if($canUpdate): 
-                        ?>
-                        <!-- Use a single update button that opens a modal with AJAX -->
-                        <button type="button" class="btn btn-sm btn-success" 
-                                onclick="openUpdateModal(<?php echo $taskId; ?>)">
+                        <?php if($canUpdate): ?>
+                        <a href="index.php?action=update_task_page&id=<?php echo $taskId; ?>" 
+                           class="btn btn-sm btn-success">
                             Update
-                        </button>
+                        </a>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -257,7 +252,7 @@ function openUpdateModal(taskId) {
             let division = task.functional_division || 'N/A';
             let badge = document.getElementById('modal_task_division');
             badge.textContent = division;
-            badge.className = 'badge bg-' + (division == 'OSDS' ? 'primary' : (division == 'CID' ? 'success' : 'info'));
+            badge.className = 'badge bg-' + (division == 'OSDS' ? 'primary' : (division == 'CID' ? 'success' : (division == 'SGOD' ? 'info' : 'secondary')));
             
             document.getElementById('modal_task_unit').textContent = task.unit_name || 'N/A';
             document.getElementById('modal_task_target_date').textContent = task.target_completion_date || 'N/A';

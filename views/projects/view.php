@@ -87,61 +87,7 @@
             </div>
         </div>
         
-        <!-- Participating Units -->
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Participating Units</h5>
-                <?php if($_SESSION['role'] == 'admin'): ?>
-                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addUnitsModal">
-                    <i class="bi bi-plus-circle"></i> Add Units
-                </button>
-                <?php endif; ?>
-            </div>
-            <div class="card-body">
-                <?php if(empty($project_units)): ?>
-                <p class="text-muted">No units assigned to this project.</p>
-                <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Unit Name</th>
-                                <th>Person In Charge</th>
-                                <th>Division</th>
-                                <?php if($_SESSION['role'] == 'admin'): ?>
-                                <th>Action</th>
-                                <?php endif; ?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach($project_units as $unit): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($unit['unit_name']); ?></td>
-                                <td><?php echo htmlspecialchars($unit['person_in_charge'] ?? 'N/A'); ?></td>
-                                <td>
-                                    <span class="badge bg-<?php 
-                                        echo $unit['functional_division'] == 'OSDS' ? 'primary' : 
-                                            ($unit['functional_division'] == 'CID' ? 'success' : 'info'); 
-                                    ?>">
-                                        <?php echo $unit['functional_division']; ?>
-                                    </span>
-                                </td>
-                                <?php if($_SESSION['role'] == 'admin'): ?>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-danger" 
-                                            onclick="removeUnit(<?php echo $project['project_id']; ?>, <?php echo $unit['id']; ?>)">
-                                        Remove
-                                    </button>
-                                </td>
-                                <?php endif; ?>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
+    
         
         <!-- Project Tasks -->
         <div class="card mb-4">

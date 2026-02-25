@@ -339,5 +339,22 @@ public function linkUnitsToProject($project_id, $unit_ids) {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
+    public function getProjectsForDropdown() {
+    $query = "SELECT 
+                project_id as id, 
+                project_name, 
+                functional_division, 
+                target_end_date, 
+                budget_allocation 
+              FROM " . $this->table . " 
+              WHERE status != 'cancelled' 
+              ORDER BY project_name ASC";
+    
+    $stmt = $this->getConnection()->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
 ?>

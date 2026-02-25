@@ -41,34 +41,41 @@ switch($action) {
     
     // Task routes
     case 'tasks':
-        require_once 'controllers/TaskController.php';
-        $taskController = new TaskController();
-        $taskController->index();
-        break;
-        
-    case 'create_task':
-        require_once 'controllers/TaskController.php';
-        $taskController = new TaskController();
-        $taskController->create();
-        break;
-        
-    case 'update_status':
-        require_once 'controllers/TaskController.php';
-        $taskController = new TaskController();
-        $taskController->updateStatus();
-        break;
-        
-    case 'update_task_page':
-        require_once 'controllers/TaskController.php';
-        $taskController = new TaskController();
-        $taskController->updatePage($_GET['id']);
-        break;
-        
-    case 'view_task':
-        require_once 'controllers/TaskController.php';
-        $taskController = new TaskController();
-        $taskController->view($_GET['id']);
-        break;
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->index();
+    break;
+    
+case 'create_task':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->create();
+    break;
+    
+case 'update_status':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->updateStatus();
+    break;
+    
+case 'update_task_page':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->updatePage($_GET['id']);
+    break;
+    
+case 'view_task':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->view($_GET['id']);
+    break;
+
+// ADD THIS NEW CASE for AJAX task fetching
+case 'get_task':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->getTaskJson();
+    break;
     
     // User routes
     case 'profile':
@@ -218,6 +225,18 @@ case 'remove_project_unit':
     require_once 'controllers/ProjectController.php';
     $projectController = new ProjectController();
     $projectController->removeProjectUnit();
+    break;
+
+case 'create_task_page':
+    require_once 'controllers/TaskController.php';
+    $controller = new TaskController();
+    $controller->createPage();
+    break;
+
+case 'update_task_page':
+    require_once 'controllers/TaskController.php';
+    $controller = new TaskController();
+    $controller->updatePage($_GET['id'] ?? 0);
     break;
         
     default:
