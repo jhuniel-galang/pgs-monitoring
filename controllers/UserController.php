@@ -19,9 +19,29 @@ class UserController {
 
     // List all users (READ)
     public function list() {
-        $users = $this->user->getAllUsers();
-        require_once __DIR__ . '/../views/user/list.php';
-    }
+    // Pagination settings
+    $limit = 10;
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $offset = ($page - 1) * $limit;
+    
+    // Build filters
+    $filters = [
+        'search' => $_GET['search'] ?? '',
+        'role' => $_GET['role'] ?? '',
+        'division' => $_GET['division'] ?? '',
+        'status' => $_GET['status'] ?? ''
+    ];
+    
+    // Get filtered users with pagination
+    $users = $this->user->getUsersWithFilters($filters, $limit, $offset);
+    $total_users = $this->user->getTotalUserCount($filters);
+    $total_pages = ceil($total_users / $limit);
+    
+    // Get summary for stats cards
+    $summary = $this->user->getUserSummary();
+    
+    require_once __DIR__ . '/../views/user/list.php';
+}
 
     // Show create form
     public function create() {

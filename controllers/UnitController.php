@@ -19,10 +19,28 @@ class UnitController {
 
     // List all units (READ)
     public function index() {
-        $units = $this->unit->getAllUnits();
-        $division_summary = $this->unit->getDivisionSummary();
-        require_once __DIR__ . '/../views/units/index.php';
-    }
+    // Pagination settings
+    $limit = 10;
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $offset = ($page - 1) * $limit;
+    
+    // Build filters
+    $filters = [
+        'search' => $_GET['search'] ?? '',
+        'division' => $_GET['division'] ?? '',
+        'status' => $_GET['status'] ?? ''
+    ];
+    
+    // Get filtered units with pagination
+    $units = $this->unit->getUnitsWithFilters($filters, $limit, $offset);
+    $total_units = $this->unit->getTotalUnitCount($filters);
+    $total_pages = ceil($total_units / $limit);
+    
+    // Get division summary for cards
+    $division_summary = $this->unit->getDivisionSummary();
+    
+    require_once __DIR__ . '/../views/units/index.php';
+}
 
     // Store new unit (CREATE)
     public function store() {

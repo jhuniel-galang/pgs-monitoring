@@ -218,5 +218,110 @@ class User extends DatabaseModel {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
+
+
+
+    public function getUsersWithFilters($filters = [], $limit = 10, $offset = 0) {
+    $query = "SELECT id, username, email, full_name, role, functional_division, status, last_login, created_at 
+              FROM " . $this->table . " 
+              WHERE 1=1";
+    
+    $params = [];
+    
+    // Apply filters
+    if(!empty($filters['search'])) {
+        $query .= " AND (username LIKE :search OR full_name LIKE :search OR email LIKE :search)";
+        $params[':search'] = '%' . $filters['search'] . '%';
+    }
+    
+    if(!empty($filters['role'])) {
+        $query .= " AND role = :role";
+        $params[':role'] = $filters['role'];
+    }
+    
+    if(!empty($filters['division'])) {
+        $query .= " AND functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['status'])) {
+        $query .= " AND status = :status";
+        $params[':status'] = $filters['status'];
+    }
+    
+    // Add ordering
+    $query .= " ORDER BY created_at DESC";
+    
+    // Add pagination
+    $query .= " LIMIT :limit OFFSET :offset";
+    
+    $stmt = $this->getConnection()->prepare($query);
+    
+    // Bind parameters
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+    
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+public function getTotalUserCount($filters = []) {
+    $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE 1=1";
+    
+    $params = [];
+    
+    // Apply same filters
+    if(!empty($filters['search'])) {
+        $query .= " AND (username LIKE :search OR full_name LIKE :search OR email LIKE :search)";
+        $params[':search'] = '%' . $filters['search'] . '%';
+    }
+    
+    if(!empty($filters['role'])) {
+        $query .= " AND role = :role";
+        $params[':role'] = $filters['role'];
+    }
+    
+    if(!empty($filters['division'])) {
+        $query .= " AND functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['status'])) {
+        $query .= " AND status = :status";
+        $params[':status'] = $filters['status'];
+    }
+    
+    $stmt = $this->getConnection()->prepare($query);
+    
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+// Get summary statistics for dashboard
+public function getUserSummary() {
+    $query = "SELECT 
+                COUNT(*) as total_users,
+                SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as total_admins,
+                SUM(CASE WHEN role = 'encoder' THEN 1 ELSE 0 END) as total_encoders,
+                SUM(CASE WHEN role = 'supervisor' THEN 1 ELSE 0 END) as total_supervisors,
+                SUM(CASE WHEN role = 'user' THEN 1 ELSE 0 END) as total_regular_users,
+                SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_users
+              FROM " . $this->table;
+    
+    $stmt = $this->getConnection()->prepare($query);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 }
 ?>

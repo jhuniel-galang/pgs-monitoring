@@ -168,5 +168,95 @@ class Unit extends DatabaseModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
+
+
+public function getUnitsWithFilters($filters = [], $limit = 10, $offset = 0) {
+    $query = "SELECT * FROM " . $this->table . " WHERE 1=1";
+    
+    $params = [];
+    
+    // Apply filters
+    if(!empty($filters['search'])) {
+        $query .= " AND (unit_name LIKE :search OR person_in_charge LIKE :search OR email LIKE :search)";
+        $params[':search'] = '%' . $filters['search'] . '%';
+    }
+    
+    if(!empty($filters['division'])) {
+        $query .= " AND functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['status'])) {
+        $query .= " AND status = :status";
+        $params[':status'] = $filters['status'];
+    }
+    
+    // Add ordering
+    $query .= " ORDER BY functional_division, unit_name";
+    
+    // Add pagination
+    $query .= " LIMIT :limit OFFSET :offset";
+    
+    $stmt = $this->getConnection()->prepare($query);
+    
+    // Bind parameters
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+    
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+public function getTotalUnitCount($filters = []) {
+    $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE 1=1";
+    
+    $params = [];
+    
+    // Apply same filters
+    if(!empty($filters['search'])) {
+        $query .= " AND (unit_name LIKE :search OR person_in_charge LIKE :search OR email LIKE :search)";
+        $params[':search'] = '%' . $filters['search'] . '%';
+    }
+    
+    if(!empty($filters['division'])) {
+        $query .= " AND functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['status'])) {
+        $query .= " AND status = :status";
+        $params[':status'] = $filters['status'];
+    }
+    
+    $stmt = $this->getConnection()->prepare($query);
+    
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+
+// Get units that are part of a specific project
+public function getUnitsByProject($project_id) {
+    $query = "SELECT u.* FROM tbl_units u
+              INNER JOIN tbl_project_units pu ON u.id = pu.unit_id
+              WHERE pu.project_id = :project_id
+              ORDER BY u.functional_division, u.unit_name";
+    
+    $stmt = $this->getConnection()->prepare($query);
+    $stmt->bindParam(':project_id', $project_id);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
 ?>

@@ -137,6 +137,88 @@ switch($action) {
         $unitController = new UnitController();
         $unitController->delete();
         break;
+
+
+    // Project routes
+case 'projects':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->index();
+    break;
+
+case 'store_project':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->store();
+    break;
+
+case 'update_project':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->update();
+    break;
+
+case 'delete_project':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->delete();
+    break;
+
+case 'view_project':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->view($_GET['id']);
+    break;
+
+
+
+
+
+
+    case 'update_project_progress':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->updateProgress();
+    break;
+
+case 'add_project_units':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->addUnits();
+    break;
+
+case 'remove_project_unit':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->removeUnit();
+    break;
+
+// Add this near your other action cases
+case 'get_project_json':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->getProjectJson();
+    break;
+
+    // Add these cases to your index.php switch statement
+
+case 'update_project_progress':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->updateProgress();
+    break;
+
+case 'add_project_units':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->addProjectUnits();
+    break;
+
+case 'remove_project_unit':
+    require_once 'controllers/ProjectController.php';
+    $projectController = new ProjectController();
+    $projectController->removeProjectUnit();
+    break;
         
     default:
         // 404 page

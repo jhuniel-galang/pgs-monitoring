@@ -4,11 +4,6 @@
     <div class="col-md-8">
         <h2>Task Details</h2>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="index.php?action=tasks" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Tasks
-        </a>
-    </div>
 </div>
 
 <div class="row">
@@ -68,8 +63,19 @@
                     <div class="col-md-3">
                         <div class="card bg-light">
                             <div class="card-body">
-                                <h6 class="fw-bold">Unit</h6>
-                                <p><?php echo htmlspecialchars($task['unit_name'] ?? 'N/A'); ?></p>
+                                <h6 class="fw-bold">Units</h6>
+                                <p>
+                                    <?php 
+                                    if(isset($task['unit_names']) && $task['unit_names']) {
+                                        $units = explode(', ', $task['unit_names']);
+                                        foreach($units as $unit) {
+                                            echo '<span class="badge bg-info me-1 mb-1">' . htmlspecialchars($unit) . '</span>';
+                                        }
+                                    } else {
+                                        echo 'N/A';
+                                    }
+                                    ?>
+                                </p>
                                 <?php if(isset($task['person_in_charge'])): ?>
                                 <small class="text-muted">PIC: <?php echo htmlspecialchars($task['person_in_charge']); ?></small>
                                 <?php endif; ?>
@@ -81,7 +87,7 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h6 class="fw-bold">Target Date</h6>
-                                <p><?php echo isset($task['target_completion_date']) ? date('F d, Y', strtotime($task['target_completion_date'])) : 'N/A'; ?></p>
+                                <p><?php echo isset($task['target_completion_date']) ? htmlspecialchars($task['target_completion_date']) : 'N/A'; ?></p>
                             </div>
                         </div>
                     </div>
@@ -198,6 +204,39 @@
                 <div class="modal-body">
                     <input type="hidden" name="task_id" value="<?php echo $task['task_id']; ?>">
                     
+                    <!-- Task Details Summary -->
+                    <div class="card mb-3 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Task: <?php echo htmlspecialchars($task['task_details']); ?></h6>
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Division:</small><br>
+                                    <span class="badge bg-<?php 
+                                        echo $task['functional_division'] == 'OSDS' ? 'primary' : 
+                                            ($task['functional_division'] == 'CID' ? 'success' : 'info'); 
+                                    ?>"><?php echo $task['functional_division']; ?></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Units:</small><br>
+                                    <?php 
+                                    if(isset($task['unit_names']) && $task['unit_names']) {
+                                        $units = explode(', ', $task['unit_names']);
+                                        foreach($units as $unit) {
+                                            echo '<span class="badge bg-info me-1">' . htmlspecialchars($unit) . '</span>';
+                                        }
+                                    } else {
+                                        echo 'N/A';
+                                    }
+                                    ?>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Target Date:</small><br>
+                                    <strong><?php echo htmlspecialchars($task['target_completion_date'] ?? 'N/A'); ?></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
                         <label class="form-label fw-bold">Current Progress</label>
                         <?php $current_percent = $task['current_percentage'] ?? 0; ?>
@@ -243,6 +282,10 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Quick Set:</label>
                         <div class="btn-group flex-wrap" role="group">
+                            <button type="button" class="btn btn-outline-warning btn-sm" 
+                                    onclick="setTaskDeferred(<?php echo $task['task_id']; ?>)">
+                                <i class="bi bi-hourglass-split"></i> Deferred/Postponed
+                            </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm" 
                                     onclick="setModalPercent(<?php echo $task['task_id']; ?>, 0)">0%</button>
                             <button type="button" class="btn btn-outline-secondary btn-sm" 
@@ -294,6 +337,19 @@ function setModalPercent(taskId, value) {
     document.getElementById('percentage' + taskId).value = value;
     document.getElementById('modalPercentInput' + taskId).value = value;
     document.getElementById('modalPreviewBar' + taskId).style.width = value + '%';
+}
+
+function setTaskDeferred(taskId) {
+    // Set progress to 0%
+    document.getElementById('percentage' + taskId).value = 0;
+    document.getElementById('modalPercentInput' + taskId).value = 0;
+    document.getElementById('modalPreviewBar' + taskId).style.width = '0%';
+    
+    // Set a default remark
+    var remarksField = document.getElementById('modalRemarks' + taskId);
+    if (remarksField && remarksField.value.trim() === '') {
+        remarksField.value = 'Task deferred/postponed';
+    }
 }
 </script>
 <?php endif; ?>
