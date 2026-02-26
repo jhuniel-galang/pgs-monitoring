@@ -311,21 +311,30 @@ public function linkUnitsToProject($project_id, $unit_ids) {
     }
 
     // Get project summary by division
-    public function getProjectSummary() {
-        $query = "SELECT 
-                    functional_division,
-                    COUNT(*) as total_projects,
-                    SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as ongoing_projects,
-                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_projects,
-                    SUM(CASE WHEN status = 'planning' THEN 1 ELSE 0 END) as planning_projects,
-                    AVG(progress_percentage) as avg_progress
-                  FROM " . $this->table . " 
-                  GROUP BY functional_division";
-        
-        $stmt = $this->getConnection()->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Get project summary by division
+public function getProjectSummary() {
+    $query = "SELECT 
+                functional_division,
+                COUNT(*) as total_projects,
+                SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as ongoing_projects,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_projects,
+                SUM(CASE WHEN status = 'planning' THEN 1 ELSE 0 END) as planning_projects,
+                COALESCE(AVG(progress_percentage), 0) as avg_progress
+              FROM " . $this->table . " 
+              GROUP BY functional_division
+              ORDER BY functional_division";
+    
+    $stmt = $this->getConnection()->prepare($query);
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // If no results, return empty array
+    if(empty($results)) {
+        return [];
     }
+    
+    return $results;
+}
 
     // Get projects for a specific unit
     public function getProjectsByUnit($unit_id) {

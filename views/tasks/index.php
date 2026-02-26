@@ -51,7 +51,7 @@
             <div class="card-body">
                 <h5 class="card-title">Average Progress: <?php echo $summary['average_percentage'] ?? 0; ?>%</h5>
                 <p class="card-text">
-                    Total Tasks: <?php echo $summary['total_tasks'] ?? 0; ?><br>
+                    Total Commitments: <?php echo $summary['total_tasks'] ?? 0; ?><br>
                     Completed: <?php echo $summary['completed_tasks'] ?? 0; ?>
                 </p>
             </div>
@@ -66,7 +66,7 @@
 <!-- Filter Section -->
 <div class="card mb-4">
     <div class="card-header bg-light">
-        <h5 class="mb-0">Filter Tasks</h5>
+        <h5 class="mb-0">Filter Commitments</h5>
     </div>
     <div class="card-body">
         <form method="GET" action="index.php" class="row g-3">
@@ -123,7 +123,7 @@
 <!-- Tasks Table -->
 <div class="card">
     <div class="card-header">
-        <h5>Task List (<?php echo $total_tasks; ?> tasks found)</h5>
+        <h5>Commitment List (<?php echo $total_tasks; ?> tasks found)</h5>
         <?php if($_SESSION['role'] == 'encoder'): ?>
         <small class="text-muted d-block">Showing only tasks from <?php echo $_SESSION['functional_division']; ?> division</small>
         <?php endif; ?>

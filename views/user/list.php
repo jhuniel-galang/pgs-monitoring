@@ -182,122 +182,19 @@
                             <td><?php echo $user['last_login'] ? date('Y-m-d H:i', strtotime($user['last_login'])) : 'Never'; ?></td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-warning" 
+                                    <button type="button" class="btn btn-sm btn-warning edit-user-btn" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#editUserModal<?php echo $user['id']; ?>">
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
                                     
                                     <?php if($user['id'] != $_SESSION['user_id']): ?>
-                                    <button type="button" class="btn btn-sm btn-danger" 
+                                    <button type="button" class="btn btn-sm btn-danger delete-user-btn" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteModal<?php echo $user['id']; ?>">
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
                                     <?php endif; ?>
-                                </div>
-
-                                <!-- Edit User Modal (keep your existing modal content) -->
-                                <div class="modal fade" id="editUserModal<?php echo $user['id']; ?>" tabindex="-1">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-warning">
-                                                <h5 class="modal-title">Edit User: <?php echo htmlspecialchars($user['username']); ?></h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form action="index.php?action=update_user" method="POST">
-                                                <div class="modal-body">
-                                                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
-                                                    
-                                                    <div class="row">
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_username<?php echo $user['id']; ?>" class="form-label">Username <span class="text-danger">*</span></label>
-                                                            <input type="text" class="form-control" id="edit_username<?php echo $user['id']; ?>" 
-                                                                   name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_password<?php echo $user['id']; ?>" class="form-label">New Password</label>
-                                                            <input type="password" class="form-control" id="edit_password<?php echo $user['id']; ?>" 
-                                                                   name="password" placeholder="Leave blank to keep current">
-                                                            <small class="text-muted">Only fill if changing password</small>
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_full_name<?php echo $user['id']; ?>" class="form-label">Full Name</label>
-                                                            <input type="text" class="form-control" id="edit_full_name<?php echo $user['id']; ?>" 
-                                                                   name="full_name" value="<?php echo htmlspecialchars($user['full_name'] ?? ''); ?>">
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_email<?php echo $user['id']; ?>" class="form-label">Email</label>
-                                                            <input type="email" class="form-control" id="edit_email<?php echo $user['id']; ?>" 
-                                                                   name="email" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>">
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_role<?php echo $user['id']; ?>" class="form-label">Role <span class="text-danger">*</span></label>
-                                                            <select class="form-select" id="edit_role<?php echo $user['id']; ?>" 
-                                                                    name="role" required onchange="toggleEditDivision(<?php echo $user['id']; ?>)">
-                                                                <option value="admin" <?php echo $user['role'] == 'admin' ? 'selected' : ''; ?>>Admin</option>
-                                                                <option value="encoder" <?php echo $user['role'] == 'encoder' ? 'selected' : ''; ?>>Encoder</option>
-                                                                <option value="user" <?php echo $user['role'] == 'user' ? 'selected' : ''; ?>>User</option>
-                                                                <option value="supervisor" <?php echo $user['role'] == 'supervisor' ? 'selected' : ''; ?>>Supervisor</option>
-                                                            </select>
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3" id="edit_division_field<?php echo $user['id']; ?>" 
-                                                             style="<?php echo $user['role'] == 'encoder' ? 'display: block;' : 'display: none;'; ?>">
-                                                            <label for="edit_functional_division<?php echo $user['id']; ?>" class="form-label">Functional Division</label>
-                                                            <select class="form-select" id="edit_functional_division<?php echo $user['id']; ?>" 
-                                                                    name="functional_division">
-                                                                <option value="">Select Division</option>
-                                                                <option value="OSDS" <?php echo ($user['functional_division'] ?? '') == 'OSDS' ? 'selected' : ''; ?>>OSDS</option>
-                                                                <option value="CID" <?php echo ($user['functional_division'] ?? '') == 'CID' ? 'selected' : ''; ?>>CID</option>
-                                                                <option value="SGOD" <?php echo ($user['functional_division'] ?? '') == 'SGOD' ? 'selected' : ''; ?>>SGOD</option>
-                                                            </select>
-                                                            <small class="text-muted">Required for encoder role</small>
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_status<?php echo $user['id']; ?>" class="form-label">Status</label>
-                                                            <select class="form-select" id="edit_status<?php echo $user['id']; ?>" name="status">
-                                                                <option value="active" <?php echo $user['status'] == 'active' ? 'selected' : ''; ?>>Active</option>
-                                                                <option value="inactive" <?php echo $user['status'] == 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-warning">Update User</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Delete Modal (keep your existing modal content) -->
-                                <div class="modal fade" id="deleteModal<?php echo $user['id']; ?>" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title">Confirm Delete</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Are you sure you want to delete user <strong><?php echo htmlspecialchars($user['username']); ?></strong>?</p>
-                                                <p class="text-danger">This action cannot be undone!</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <form action="index.php?action=delete_user" method="POST">
-                                                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-danger">Delete User</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -412,6 +309,112 @@
     </div>
 </div>
 
+<!-- Edit User Modals and Delete Modals (placed outside the table) -->
+<?php foreach($users as $user): ?>
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="editUserModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="editUserModalLabel<?php echo $user['id']; ?>">Edit User: <?php echo htmlspecialchars($user['username']); ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="index.php?action=update_user" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_username<?php echo $user['id']; ?>" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit_username<?php echo $user['id']; ?>" 
+                                   name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_password<?php echo $user['id']; ?>" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="edit_password<?php echo $user['id']; ?>" 
+                                   name="password" placeholder="Leave blank to keep current">
+                            <small class="text-muted">Only fill if changing password</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_full_name<?php echo $user['id']; ?>" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="edit_full_name<?php echo $user['id']; ?>" 
+                                   name="full_name" value="<?php echo htmlspecialchars($user['full_name'] ?? ''); ?>">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_email<?php echo $user['id']; ?>" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email<?php echo $user['id']; ?>" 
+                                   name="email" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_role<?php echo $user['id']; ?>" class="form-label">Role <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_role<?php echo $user['id']; ?>" 
+                                    name="role" required onchange="toggleEditDivision(<?php echo $user['id']; ?>)">
+                                <option value="admin" <?php echo $user['role'] == 'admin' ? 'selected' : ''; ?>>Admin</option>
+                                <option value="encoder" <?php echo $user['role'] == 'encoder' ? 'selected' : ''; ?>>Encoder</option>
+                                <option value="user" <?php echo $user['role'] == 'user' ? 'selected' : ''; ?>>User</option>
+                                <option value="supervisor" <?php echo $user['role'] == 'supervisor' ? 'selected' : ''; ?>>Supervisor</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3" id="edit_division_field<?php echo $user['id']; ?>" 
+                             style="<?php echo $user['role'] == 'encoder' ? 'display: block;' : 'display: none;'; ?>">
+                            <label for="edit_functional_division<?php echo $user['id']; ?>" class="form-label">Functional Division</label>
+                            <select class="form-select" id="edit_functional_division<?php echo $user['id']; ?>" 
+                                    name="functional_division">
+                                <option value="">Select Division</option>
+                                <option value="OSDS" <?php echo ($user['functional_division'] ?? '') == 'OSDS' ? 'selected' : ''; ?>>OSDS</option>
+                                <option value="CID" <?php echo ($user['functional_division'] ?? '') == 'CID' ? 'selected' : ''; ?>>CID</option>
+                                <option value="SGOD" <?php echo ($user['functional_division'] ?? '') == 'SGOD' ? 'selected' : ''; ?>>SGOD</option>
+                            </select>
+                            <small class="text-muted">Required for encoder role</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_status<?php echo $user['id']; ?>" class="form-label">Status</label>
+                            <select class="form-select" id="edit_status<?php echo $user['id']; ?>" name="status">
+                                <option value="active" <?php echo $user['status'] == 'active' ? 'selected' : ''; ?>>Active</option>
+                                <option value="inactive" <?php echo $user['status'] == 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="deleteModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel<?php echo $user['id']; ?>">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete user <strong><?php echo htmlspecialchars($user['username']); ?></strong>?</p>
+                <p class="text-danger">This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <form action="index.php?action=delete_user" method="POST">
+                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endforeach; ?>
+
 <script>
 // Toggle division field for create modal
 function toggleCreateDivision() {
@@ -440,6 +443,25 @@ function toggleEditDivision(userId) {
         document.getElementById('edit_functional_division' + userId).required = false;
     }
 }
+
+// Debug: Check if Bootstrap modal is working
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('User management page loaded');
+    
+    // Test if Bootstrap is available
+    if (typeof bootstrap !== 'undefined') {
+        console.log('Bootstrap is loaded');
+    } else {
+        console.error('Bootstrap is not loaded');
+    }
+    
+    // Add click event listeners to edit buttons
+    document.querySelectorAll('.edit-user-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            console.log('Edit button clicked');
+        });
+    });
+});
 </script>
 
 <?php require_once 'views/layout/footer.php'; ?>

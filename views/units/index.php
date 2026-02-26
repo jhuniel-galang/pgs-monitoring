@@ -34,7 +34,7 @@
 <!-- Division Summary Cards -->
 <div class="row mb-4">
     <?php foreach($division_summary as $summary): ?>
-    <div class="col-md-3">  <!-- Add this col-md-3 to make them side by side -->
+    <div class="col-md-3">
         <div class="card text-white bg-<?php 
             echo $summary['functional_division'] == 'OSDS' ? 'primary' : 
                 ($summary['functional_division'] == 'CID' ? 'success' : 
@@ -147,113 +147,17 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-sm btn-warning" 
+                                    <button type="button" class="btn btn-sm btn-warning edit-unit-btn" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#editUnitModal<?php echo $unit['id']; ?>">
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
                                     
-                                    <button type="button" class="btn btn-sm btn-danger" 
+                                    <button type="button" class="btn btn-sm btn-danger delete-unit-btn" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteUnitModal<?php echo $unit['id']; ?>">
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
-                                </div>
-
-                                <!-- Edit Unit Modal -->
-                                <div class="modal fade" id="editUnitModal<?php echo $unit['id']; ?>" tabindex="-1">
-                                    <!-- Keep your existing edit modal content -->
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-warning">
-                                                <h5 class="modal-title">Edit Unit: <?php echo htmlspecialchars($unit['unit_name']); ?></h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form action="index.php?action=update_unit" method="POST">
-                                                <div class="modal-body">
-                                                    <input type="hidden" name="id" value="<?php echo $unit['id']; ?>">
-                                                    
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="edit_division<?php echo $unit['id']; ?>" class="form-label">Division <span class="text-danger">*</span></label>
-                                                        <select class="form-select" id="edit_division<?php echo $unit['id']; ?>" 
-                                                                name="functional_division" required>
-                                                            <option value="OSDS" <?php echo $unit['functional_division'] == 'OSDS' ? 'selected' : ''; ?>>OSDS</option>
-                                                            <option value="CID" <?php echo $unit['functional_division'] == 'CID' ? 'selected' : ''; ?>>CID</option>
-                                                            <option value="SGOD" <?php echo $unit['functional_division'] == 'SGOD' ? 'selected' : ''; ?>>SGOD</option>
-                                                            <option value="Schools" <?php echo $unit['functional_division'] == 'Schools' ? 'selected' : ''; ?>>Schools</option>
-                                                        </select>
-                                                    </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_unit_name<?php echo $unit['id']; ?>" class="form-label">Unit Name <span class="text-danger">*</span></label>
-                                                            <input type="text" class="form-control" id="edit_unit_name<?php echo $unit['id']; ?>" 
-                                                                   name="unit_name" value="<?php echo htmlspecialchars($unit['unit_name']); ?>" required>
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_pic<?php echo $unit['id']; ?>" class="form-label">Person In Charge</label>
-                                                            <input type="text" class="form-control" id="edit_pic<?php echo $unit['id']; ?>" 
-                                                                   name="person_in_charge" value="<?php echo htmlspecialchars($unit['person_in_charge'] ?? ''); ?>">
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_designation<?php echo $unit['id']; ?>" class="form-label">Designation</label>
-                                                            <input type="text" class="form-control" id="edit_designation<?php echo $unit['id']; ?>" 
-                                                                   name="designation" value="<?php echo htmlspecialchars($unit['designation'] ?? ''); ?>">
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_email<?php echo $unit['id']; ?>" class="form-label">Email</label>
-                                                            <input type="email" class="form-control" id="edit_email<?php echo $unit['id']; ?>" 
-                                                                   name="email" value="<?php echo htmlspecialchars($unit['email'] ?? ''); ?>">
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_contact<?php echo $unit['id']; ?>" class="form-label">Contact Number</label>
-                                                            <input type="text" class="form-control" id="edit_contact<?php echo $unit['id']; ?>" 
-                                                                   name="contact_number" value="<?php echo htmlspecialchars($unit['contact_number'] ?? ''); ?>">
-                                                        </div>
-                                                        
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="edit_status<?php echo $unit['id']; ?>" class="form-label">Status</label>
-                                                            <select class="form-select" id="edit_status<?php echo $unit['id']; ?>" name="status">
-                                                                <option value="active" <?php echo $unit['status'] == 'active' ? 'selected' : ''; ?>>Active</option>
-                                                                <option value="inactive" <?php echo $unit['status'] == 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-warning">Update Unit</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Delete Unit Modal -->
-                                <div class="modal fade" id="deleteUnitModal<?php echo $unit['id']; ?>" tabindex="-1">
-                                    <!-- Keep your existing delete modal content -->
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title">Confirm Delete</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Are you sure you want to delete unit <strong><?php echo htmlspecialchars($unit['unit_name']); ?></strong>?</p>
-                                                <p class="text-danger">This action cannot be undone!</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <form action="index.php?action=delete_unit" method="POST">
-                                                    <input type="hidden" name="id" value="<?php echo $unit['id']; ?>">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-danger">Delete Unit</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -296,7 +200,7 @@
     </div>
 </div>
 
-<!-- Create Unit Modal (keep your existing create modal) -->
+<!-- Create Unit Modal -->
 <div class="modal fade" id="createUnitModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -360,5 +264,131 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Unit Modals and Delete Modals (placed outside the table) -->
+<?php foreach($units as $unit): ?>
+<!-- Edit Unit Modal -->
+<div class="modal fade" id="editUnitModal<?php echo $unit['id']; ?>" tabindex="-1" aria-labelledby="editUnitModalLabel<?php echo $unit['id']; ?>" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="editUnitModalLabel<?php echo $unit['id']; ?>">Edit Unit: <?php echo htmlspecialchars($unit['unit_name']); ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="index.php?action=update_unit" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="<?php echo $unit['id']; ?>">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_division<?php echo $unit['id']; ?>" class="form-label">Division <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_division<?php echo $unit['id']; ?>" 
+                                    name="functional_division" required>
+                                <option value="OSDS" <?php echo $unit['functional_division'] == 'OSDS' ? 'selected' : ''; ?>>OSDS</option>
+                                <option value="CID" <?php echo $unit['functional_division'] == 'CID' ? 'selected' : ''; ?>>CID</option>
+                                <option value="SGOD" <?php echo $unit['functional_division'] == 'SGOD' ? 'selected' : ''; ?>>SGOD</option>
+                                <option value="Schools" <?php echo $unit['functional_division'] == 'Schools' ? 'selected' : ''; ?>>Schools</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_unit_name<?php echo $unit['id']; ?>" class="form-label">Unit Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit_unit_name<?php echo $unit['id']; ?>" 
+                                   name="unit_name" value="<?php echo htmlspecialchars($unit['unit_name']); ?>" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_pic<?php echo $unit['id']; ?>" class="form-label">Person In Charge</label>
+                            <input type="text" class="form-control" id="edit_pic<?php echo $unit['id']; ?>" 
+                                   name="person_in_charge" value="<?php echo htmlspecialchars($unit['person_in_charge'] ?? ''); ?>">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_designation<?php echo $unit['id']; ?>" class="form-label">Designation</label>
+                            <input type="text" class="form-control" id="edit_designation<?php echo $unit['id']; ?>" 
+                                   name="designation" value="<?php echo htmlspecialchars($unit['designation'] ?? ''); ?>">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_email<?php echo $unit['id']; ?>" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email<?php echo $unit['id']; ?>" 
+                                   name="email" value="<?php echo htmlspecialchars($unit['email'] ?? ''); ?>">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_contact<?php echo $unit['id']; ?>" class="form-label">Contact Number</label>
+                            <input type="text" class="form-control" id="edit_contact<?php echo $unit['id']; ?>" 
+                                   name="contact_number" value="<?php echo htmlspecialchars($unit['contact_number'] ?? ''); ?>">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_status<?php echo $unit['id']; ?>" class="form-label">Status</label>
+                            <select class="form-select" id="edit_status<?php echo $unit['id']; ?>" name="status">
+                                <option value="active" <?php echo $unit['status'] == 'active' ? 'selected' : ''; ?>>Active</option>
+                                <option value="inactive" <?php echo $unit['status'] == 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Unit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Unit Modal -->
+<div class="modal fade" id="deleteUnitModal<?php echo $unit['id']; ?>" tabindex="-1" aria-labelledby="deleteUnitModalLabel<?php echo $unit['id']; ?>" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUnitModalLabel<?php echo $unit['id']; ?>">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete unit <strong><?php echo htmlspecialchars($unit['unit_name']); ?></strong>?</p>
+                <p class="text-danger">This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <form action="index.php?action=delete_unit" method="POST">
+                    <input type="hidden" name="id" value="<?php echo $unit['id']; ?>">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Unit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endforeach; ?>
+
+<script>
+// Debug: Check if Bootstrap modal is working
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Unit management page loaded');
+    
+    // Test if Bootstrap is available
+    if (typeof bootstrap !== 'undefined') {
+        console.log('Bootstrap is loaded');
+    } else {
+        console.error('Bootstrap is not loaded');
+    }
+    
+    // Add click event listeners to edit buttons
+    document.querySelectorAll('.edit-unit-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            console.log('Edit button clicked for unit');
+        });
+    });
+    
+    // Add click event listeners to delete buttons
+    document.querySelectorAll('.delete-unit-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            console.log('Delete button clicked for unit');
+        });
+    });
+});
+</script>
 
 <?php require_once 'views/layout/footer.php'; ?>

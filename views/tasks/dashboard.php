@@ -2,7 +2,7 @@
 
 <div class="row mb-4">
     <div class="col-md-12">
-        <h2>PGS Monitoring Dashboard</h2>
+        <h3>PGS Monitoring Dashboard</h3>
         <p class="text-muted">
             Welcome back, <?php echo htmlspecialchars($user['full_name'] ?? $user['username']); ?>!
             <?php if($_SESSION['role'] == 'encoder'): ?>
@@ -13,6 +13,234 @@
         </p>
     </div>
 </div>
+
+
+
+<!-- Projects Carousel -->
+<?php if(isset($projects) && !empty($projects)): ?>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> Core Area & Commitments Overview</h5>
+                <div>
+                    <span class="badge bg-light text-dark me-2" id="carousel-status">Core Area Overview</span>
+                    <button class="btn btn-sm btn-light" onclick="prevSlide()">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light" onclick="nextSlide()">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="projectCarousel" class="project-carousel">
+                    <!-- Slide 1: All Projects Overview (4 per row) -->
+                    <div class="carousel-slide active" data-slide="0" data-type="overview">
+                        <div class="row">
+                            <?php 
+                            $projectCount = 0;
+                            foreach($projects as $project): 
+                                if($projectCount % 4 == 0 && $projectCount > 0) {
+                                    echo '</div><div class="row mt-3">';
+                                }
+                            ?>
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100 border-<?php 
+                                    echo $project['functional_division'] == 'OSDS' ? 'primary' : 
+                                        ($project['functional_division'] == 'CID' ? 'success' : 
+                                        ($project['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
+                                ?>">
+                                    <div class="card-header bg-<?php 
+                                        echo $project['functional_division'] == 'OSDS' ? 'primary' : 
+                                            ($project['functional_division'] == 'CID' ? 'success' : 
+                                            ($project['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
+                                    ?> text-white">
+                                        <h6 class="mb-0 text-truncate"><?php echo htmlspecialchars($project['project_name']); ?></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block">Division</small>
+                                            <strong><?php echo $project['functional_division']; ?></strong>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block">Progress</small>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-<?php 
+                                                    echo $project['progress_percentage'] >= 100 ? 'success' : 
+                                                        ($project['progress_percentage'] >= 50 ? 'info' : 'warning'); 
+                                                ?>" style="width: <?php echo $project['progress_percentage']; ?>%">
+                                                </div>
+                                            </div>
+                                            <small class="fw-bold"><?php echo $project['progress_percentage']; ?>%</small>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block">Commitments</small>
+                                            <strong><?php echo $project['completed_tasks'] ?? 0; ?>/<?php echo $project['total_tasks'] ?? 0; ?></strong>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary w-100 view-project-tasks" 
+                                                onclick="showProjectTasks(<?php echo $project['project_id']; ?>)">
+                                            View Commitment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php 
+                                $projectCount++;
+                            endforeach; 
+                            ?>
+                        </div>
+                    </div>
+
+                    <!-- Individual Project Task Slides -->
+                    <?php foreach($projects as $project): ?>
+                    <div class="carousel-slide" data-slide="project_<?php echo $project['project_id']; ?>" data-type="project" data-project-id="<?php echo $project['project_id']; ?>">
+                        <div class="card">
+                            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-list-task"></i> 
+                                    <?php echo htmlspecialchars($project['project_name']); ?> - Commitment
+                                </h5>
+                                <button class="btn btn-sm btn-light" onclick="goToSlide(0)">
+                                    <i class="bi bi-arrow-left"></i> Back to Overview
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <?php
+                                // Get tasks for this project
+                                $project_tasks = array_filter($all_tasks ?? [], function($task) use ($project) {
+                                    return ($task['project_id'] ?? 0) == $project['project_id'];
+                                });
+                                ?>
+                                
+                                <?php if(empty($project_tasks)): ?>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> No tasks found for this project.
+                                    <?php if($_SESSION['role'] == 'admin'): ?>
+                                    <a href="index.php?action=create_task_page&project_id=<?php echo $project['project_id']; ?>" class="alert-link">
+                                        Create a Commitment
+                                    </a>
+                                    <?php endif; ?>
+                                </div>
+                                <?php else: ?>
+                                <!-- Display tasks as cards in a 4x12 grid -->
+                                <div class="row">
+                                    <?php foreach($project_tasks as $task): 
+                                        $percentage = $task['current_percentage'] ?? 0;
+                                        $statusColor = $percentage >= 100 ? 'success' : ($percentage > 0 ? 'warning' : 'secondary');
+                                        $statusText = $percentage >= 100 ? 'Completed' : ($percentage > 0 ? 'In Progress' : 'Not Started');
+                                    ?>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card h-100 border-<?php echo $statusColor; ?>">
+                                            <div class="card-header bg-<?php echo $statusColor; ?> text-white d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-light text-dark">Priority: <?php echo ucfirst($task['priority'] ?? 'medium'); ?></span>
+                                                <small>ID: <?php echo $task['task_id']; ?></small>
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="card-title text-truncate" title="<?php echo htmlspecialchars($task['task_details']); ?>">
+                                                    <?php echo htmlspecialchars(substr($task['task_details'], 0, 50)); ?>...
+                                                </h6>
+                                                
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block">Assigned Units</small>
+                                                    <div>
+                                                        <?php 
+                                                        if(isset($task['unit_names']) && $task['unit_names']) {
+                                                            $units = explode(', ', $task['unit_names']);
+                                                            $displayUnits = array_slice($units, 0, 2);
+                                                            foreach($displayUnits as $unit) {
+                                                                echo '<span class="badge bg-info me-1">' . htmlspecialchars($unit) . '</span>';
+                                                            }
+                                                            if(count($units) > 2) {
+                                                                echo '<span class="badge bg-secondary">+' . (count($units)-2) . '</span>';
+                                                            }
+                                                        } else {
+                                                            echo '<span class="text-muted">No units assigned</span>';
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block">Progress</small>
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-<?php echo $statusColor; ?>" 
+                                                             style="width: <?php echo $percentage; ?>%">
+                                                        </div>
+                                                    </div>
+                                                    <small class="fw-bold"><?php echo $percentage; ?>%</small>
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block">Target Date</small>
+                                                    <strong><?php echo htmlspecialchars($task['target_completion_date'] ?? 'N/A'); ?></strong>
+                                                </div>
+                                                
+                                                <?php if(isset($task['last_update']) && $task['last_update']): ?>
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block">Last Update</small>
+                                                    <small><?php echo date('M d, Y', strtotime($task['last_update'])); ?></small>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="card-footer bg-transparent">
+                                                <a href="index.php?action=view_task&id=<?php echo $task['task_id']; ?>" 
+                                                   class="btn btn-sm btn-outline-primary w-100">
+                                                    View Details
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <div class="mt-3">
+                                    <a href="index.php?action=view_project&id=<?php echo $project['project_id']; ?>" 
+                                       class="btn btn-primary">
+                                        View Project Details
+                                    </a>
+                                    <?php if($_SESSION['role'] == 'admin'): ?>
+                                    <a href="index.php?action=create_task_page&project_id=<?php echo $project['project_id']; ?>" 
+                                       class="btn btn-success">
+                                        <i class="bi bi-plus-circle"></i> Add Commitment
+                                    </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                
+                <!-- Carousel Indicators -->
+                <div class="carousel-indicators mt-3">
+                    <button type="button" class="indicator active" onclick="goToSlide(0)">Projects Overview</button>
+                    <?php foreach($projects as $index => $project): ?>
+                    <button type="button" class="indicator" onclick="goToSlide('project_<?php echo $project['project_id']; ?>')">
+                        <?php echo htmlspecialchars(substr($project['project_name'], 0, 15)); ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php else: ?>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No projects found. 
+            <?php if($_SESSION['role'] == 'admin'): ?>
+            <a href="index.php?action=projects" class="alert-link">Create your first project</a>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+
+
 
 <!-- Division Summary Cards (Quick overview) -->
 <div class="row mb-4">
@@ -34,171 +262,8 @@
     <?php endforeach; ?>
 </div>
 
-<!-- Projects Carousel -->
-<?php if(isset($projects) && !empty($projects)): ?>
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> Project Progress Overview</h5>
-                <div>
-                    <span class="badge bg-light text-dark me-2" id="carousel-status">Showing 1-2 of <?php echo count($projects); ?></span>
-                    <button class="btn btn-sm btn-light" onclick="prevSlide()">
-                        <i class="bi bi-chevron-left"></i>
-                    </button>
-                    <button class="btn btn-sm btn-light" onclick="nextSlide()">
-                        <i class="bi bi-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div id="projectCarousel" class="project-carousel">
-                    <?php 
-                    // Group projects into slides of 2
-                    $project_chunks = array_chunk($projects, 2);
-                    foreach($project_chunks as $index => $chunk): 
-                    ?>
-                    <div class="carousel-slide <?php echo $index === 0 ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>">
-                        <div class="row">
-                            <?php foreach($chunk as $project): ?>
-                            <div class="col-md-6 mb-3">
-                                <div class="card h-100 border-<?php 
-                                    echo $project['functional_division'] == 'OSDS' ? 'primary' : 
-                                        ($project['functional_division'] == 'CID' ? 'success' : 
-                                        ($project['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
-                                ?>">
-                                    <div class="card-header bg-<?php 
-                                        echo $project['functional_division'] == 'OSDS' ? 'primary' : 
-                                            ($project['functional_division'] == 'CID' ? 'success' : 
-                                            ($project['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
-                                    ?> text-white d-flex justify-content-between align-items-center">
-                                        <h6 class="mb-0"><?php echo htmlspecialchars($project['project_name']); ?></h6>
-                                        <span class="badge bg-light text-dark">ID: <?php echo $project['project_id']; ?></span>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row mb-3">
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Division</small>
-                                                <strong><?php echo $project['functional_division']; ?></strong>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Project Lead</small>
-                                                <strong><?php echo htmlspecialchars($project['project_lead'] ?? 'N/A'); ?></strong>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row mb-3">
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Priority</small>
-                                                <span class="badge bg-<?php 
-                                                    echo $project['priority'] == 'critical' ? 'danger' : 
-                                                        ($project['priority'] == 'high' ? 'warning' : 
-                                                        ($project['priority'] == 'medium' ? 'info' : 'secondary')); 
-                                                ?>">
-                                                    <?php echo ucfirst($project['priority'] ?? 'medium'); ?>
-                                                </span>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted d-block">Tasks</small>
-                                                <strong><?php echo $project['completed_tasks'] ?? 0; ?>/<?php echo $project['total_tasks'] ?? 0; ?></strong>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="mb-2">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Progress</span>
-                                                <span class="fw-bold"><?php echo $project['progress_percentage']; ?>%</span>
-                                            </div>
-                                            <div class="progress" style="height: 10px;">
-                                                <div class="progress-bar bg-<?php 
-                                                    echo $project['progress_percentage'] >= 100 ? 'success' : 
-                                                        ($project['progress_percentage'] >= 50 ? 'info' : 'warning'); 
-                                                ?>" style="width: <?php echo $project['progress_percentage']; ?>%">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <?php if(isset($project['latest_task'])): ?>
-                                        <div class="mt-3 p-2 bg-light rounded">
-                                            <small class="text-muted d-block">Latest Task:</small>
-                                            <small><?php echo htmlspecialchars(substr($project['latest_task'], 0, 50)); ?>...</small>
-                                        </div>
-                                        <?php endif; ?>
-                                        
-                                        <div class="mt-3">
-                                            <a href="index.php?action=view_project&id=<?php echo $project['project_id']; ?>" 
-                                               class="btn btn-sm btn-outline-primary w-100">
-                                                View Project Details
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                            
-                            <!-- If only one project in this slide, add an empty placeholder -->
-                            <?php if(count($chunk) == 1): ?>
-                            <div class="col-md-6 mb-3">
-                                <!-- Empty placeholder for layout balance -->
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                
-                <!-- Carousel Indicators -->
-                <?php if(count($project_chunks) > 1): ?>
-                <div class="carousel-indicators mt-3">
-                    <?php for($i = 0; $i < count($project_chunks); $i++): ?>
-                    <button type="button" class="indicator <?php echo $i === 0 ? 'active' : ''; ?>" 
-                            onclick="goToSlide(<?php echo $i; ?>)"></button>
-                    <?php endfor; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</div>
-<?php else: ?>
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No projects found. 
-            <?php if($_SESSION['role'] == 'admin'): ?>
-            <a href="index.php?action=projects" class="alert-link">Create your first project</a>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 
-<!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Quick Actions</h5>
-            </div>
-            <div class="card-body">
-                <a href="index.php?action=projects" class="btn btn-info me-2">
-                    <i class="bi bi-folder"></i> View All Projects
-                </a>
-                <a href="index.php?action=tasks" class="btn btn-primary me-2">
-                    <i class="bi bi-list-task"></i> View All Tasks
-                </a>
-                <?php if($_SESSION['role'] == 'admin'): ?>
-                <a href="index.php?action=create_task_page" class="btn btn-success me-2">
-                    <i class="bi bi-plus-circle"></i> Create New Task
-                </a>
-                <a href="index.php?action=units" class="btn btn-secondary">
-                    <i class="bi bi-building"></i> Manage Units
-                </a>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Recent Tasks -->
 <div class="row">
@@ -208,37 +273,28 @@
                 <h5>Recent Tasks</h5>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Task</th>
-                                <th>Project</th>
-                                <th>Division</th>
-                                <th>Progress</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if(empty($recent_tasks)): ?>
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">No recent tasks found.</td>
-                            </tr>
-                            <?php else: ?>
-                                <?php foreach($recent_tasks as $task): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars(substr($task['task_details'], 0, 50)); ?>...</td>
-                                    <td>
-                                        <?php 
-                                        if(isset($task['project_name'])) {
-                                            echo htmlspecialchars(substr($task['project_name'], 0, 30));
-                                        } else {
-                                            echo '<span class="text-muted">No Project</span>';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td>
+                <div class="row">
+                    <?php if(empty($recent_tasks)): ?>
+                    <div class="col-12">
+                        <p class="text-muted text-center">No recent tasks found.</p>
+                    </div>
+                    <?php else: ?>
+                        <?php foreach($recent_tasks as $task): 
+                            $percentage = $task['current_percentage'] ?? 0;
+                            $statusColor = $percentage >= 100 ? 'success' : ($percentage > 0 ? 'warning' : 'secondary');
+                        ?>
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100 border-<?php echo $statusColor; ?>">
+                                <div class="card-header bg-<?php echo $statusColor; ?> text-white d-flex justify-content-between align-items-center">
+                                    <small class="text-truncate"><?php echo htmlspecialchars($task['project_name'] ?? 'No Project'); ?></small>
+                                    <span class="badge bg-light text-dark"><?php echo ucfirst($task['priority'] ?? 'medium'); ?></span>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-title text-truncate" title="<?php echo htmlspecialchars($task['task_details']); ?>">
+                                        <?php echo htmlspecialchars(substr($task['task_details'], 0, 40)); ?>...
+                                    </h6>
+                                    
+                                    <div class="mb-2">
                                         <span class="badge bg-<?php 
                                             echo $task['functional_division'] == 'OSDS' ? 'primary' : 
                                                 ($task['functional_division'] == 'CID' ? 'success' : 
@@ -246,36 +302,28 @@
                                         ?>">
                                             <?php echo $task['functional_division']; ?>
                                         </span>
-                                    </td>
-                                    <td style="width: 200px;">
-                                        <?php $percentage = $task['current_percentage'] ?? 0; ?>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-<?php 
-                                                echo $percentage >= 100 ? 'success' : 
-                                                    ($percentage >= 50 ? 'info' : 'warning'); 
-                                            ?>" style="width: <?php echo $percentage; ?>%">
-                                                <?php echo $percentage; ?>%
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Progress</small>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-<?php echo $statusColor; ?>" 
+                                                 style="width: <?php echo $percentage; ?>%">
                                             </div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <?php if($percentage >= 100): ?>
-                                            <span class="badge bg-success">Completed</span>
-                                        <?php elseif($percentage > 0): ?>
-                                            <span class="badge bg-warning">In Progress</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary">Not Started</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <a href="index.php?action=view_task&id=<?php echo $task['task_id']; ?>" 
-                                           class="btn btn-sm btn-info">View</a>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                                        <small class="fw-bold"><?php echo $percentage; ?>%</small>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <a href="index.php?action=view_task&id=<?php echo $task['task_id']; ?>" 
+                                       class="btn btn-sm btn-outline-primary w-100">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -285,7 +333,7 @@
 <style>
 .project-carousel {
     position: relative;
-    min-height: 300px;
+    min-height: 400px;
 }
 
 .carousel-slide {
@@ -301,50 +349,105 @@
 
 .carousel-indicators {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
+    margin-top: 20px;
+    position: relative;
+    bottom: 0;
 }
 
 .carousel-indicators .indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: none;
-    background-color: #ccc;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+    color: #495057;
     cursor: pointer;
-    padding: 0;
-    transition: background-color 0.3s;
+    font-size: 0.8rem;
+    transition: all 0.3s;
 }
 
 .carousel-indicators .indicator.active {
     background-color: #007bff;
-    transform: scale(1.2);
+    color: white;
+    border-color: #007bff;
+    transform: scale(1.05);
 }
 
 .carousel-indicators .indicator:hover {
-    background-color: #999;
+    background-color: #e9ecef;
+}
+
+.carousel-indicators .indicator.active:hover {
+    background-color: #0056b3;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Text truncation for long names */
+.text-truncate {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Card body spacing */
+.card-body {
+    padding: 1rem;
+}
+
+.card-body small {
+    font-size: 0.75rem;
+}
+
+.card-footer {
+    padding: 0.75rem 1rem;
 }
 </style>
 
 <script>
-let currentSlide = 0;
-let totalSlides = <?php echo isset($project_chunks) ? count($project_chunks) : 0; ?>;
+let currentSlide = '0';
 let autoPlayInterval;
+let slideOrder = ['0'];
 
-function showSlide(index) {
-    if (totalSlides === 0) return;
-    
+// Initialize slide order
+<?php 
+echo "slideOrder.push('" . implode("', '", array_map(function($p) { 
+    return 'project_' . $p['project_id']; 
+}, $projects)) . "');";
+?>
+
+function showSlide(slideId) {
     // Hide all slides
     document.querySelectorAll('.carousel-slide').forEach(slide => {
         slide.classList.remove('active');
     });
     
     // Show selected slide
-    document.querySelector(`.carousel-slide[data-slide="${index}"]`).classList.add('active');
+    const targetSlide = document.querySelector(`.carousel-slide[data-slide="${slideId}"]`);
+    if (targetSlide) {
+        targetSlide.classList.add('active');
+    }
     
     // Update indicators
     document.querySelectorAll('.indicator').forEach((indicator, i) => {
-        if (i === index) {
+        const indicatorSlideId = i === 0 ? '0' : slideOrder[i];
+        if (indicatorSlideId == slideId) {
             indicator.classList.add('active');
         } else {
             indicator.classList.remove('active');
@@ -352,38 +455,45 @@ function showSlide(index) {
     });
     
     // Update status text
-    const start = index * 2 + 1;
-    const end = Math.min((index + 1) * 2, <?php echo count($projects ?? []); ?>);
-    document.getElementById('carousel-status').textContent = `Showing ${start}-${end} of <?php echo count($projects ?? []); ?>`;
+    const statusEl = document.getElementById('carousel-status');
+    if (slideId === '0') {
+        statusEl.textContent = 'Projects Overview';
+    } else {
+        const projectName = document.querySelector(`.carousel-slide[data-slide="${slideId}"] .card-header h5`).textContent;
+        statusEl.textContent = projectName;
+    }
     
-    currentSlide = index;
+    currentSlide = slideId;
 }
 
 function nextSlide() {
-    if (totalSlides === 0) return;
-    let next = (currentSlide + 1) % totalSlides;
-    showSlide(next);
+    const currentIndex = slideOrder.indexOf(currentSlide);
+    let nextIndex = (currentIndex + 1) % slideOrder.length;
+    showSlide(slideOrder[nextIndex]);
     resetAutoPlay();
 }
 
 function prevSlide() {
-    if (totalSlides === 0) return;
-    let prev = (currentSlide - 1 + totalSlides) % totalSlides;
-    showSlide(prev);
+    const currentIndex = slideOrder.indexOf(currentSlide);
+    let prevIndex = (currentIndex - 1 + slideOrder.length) % slideOrder.length;
+    showSlide(slideOrder[prevIndex]);
     resetAutoPlay();
 }
 
-function goToSlide(index) {
-    if (totalSlides === 0) return;
-    showSlide(index);
+function goToSlide(slideId) {
+    showSlide(slideId);
     resetAutoPlay();
+}
+
+function showProjectTasks(projectId) {
+    goToSlide('project_' + projectId);
 }
 
 function startAutoPlay() {
-    if (totalSlides <= 1) return;
+    if (slideOrder.length <= 1) return;
     autoPlayInterval = setInterval(() => {
         nextSlide();
-    }, 30000); // 30 seconds
+    }, 20000); 
 }
 
 function resetAutoPlay() {

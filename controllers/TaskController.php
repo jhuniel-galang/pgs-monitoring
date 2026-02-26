@@ -231,7 +231,7 @@ class TaskController {
     $projectModel = new Project();
     
     if($user['role'] == 'admin') {
-        // For admin: get all projects grouped by division
+        // For admin: get all projects
         $projects = $projectModel->getAllProjects([], 100, 0);
         
         // Group projects by division and calculate summaries
@@ -240,7 +240,7 @@ class TaskController {
         
         foreach($divisions as $division) {
             $division_projects = array_filter($projects, function($p) use ($division) {
-                return $p['functional_division'] == $division;
+                return ($p['functional_division'] ?? '') == $division;
             });
             
             $total_projects = count($division_projects);
@@ -263,8 +263,12 @@ class TaskController {
             ];
         }
         
-        // Get recent tasks for admin
+        // Get ALL tasks for the project task slides
+        $all_tasks = $this->task->getAllTasks();
+        
+        // Get recent tasks (5 most recent)
         $recent_tasks = $this->task->getAllTasks();
+        $recent_tasks = array_slice($recent_tasks, 0, 5);
         
     } else {
         // For encoder: get only their division projects
@@ -291,12 +295,13 @@ class TaskController {
             'average_progress' => $total_projects > 0 ? round($total_progress / $total_projects, 2) : 0
         ]];
         
+        // Get ALL tasks for encoder (only their division)
+        $all_tasks = $this->task->getTasksByDivisionForEncoder($user['functional_division']);
+        
         // Get recent tasks for encoder (only their division)
         $recent_tasks = $this->task->getTasksByDivisionForEncoder($user['functional_division']);
+        $recent_tasks = array_slice($recent_tasks, 0, 5);
     }
-    
-    // Get only 5 most recent tasks
-    $recent_tasks = array_slice($recent_tasks, 0, 5);
     
     require_once __DIR__ . '/../views/tasks/dashboard.php';
 }

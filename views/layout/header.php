@@ -23,7 +23,7 @@
                     
                     <!-- Tasks link - visible to ALL logged-in users -->
                     <li class="nav-item">
-                        <a class="nav-link" href="index.php?action=tasks">Tasks</a>
+                        <a class="nav-link" href="index.php?action=tasks">Commitments</a>
                     </li>
                     
                     <!-- Admin only links -->
@@ -37,7 +37,7 @@
                     <?php endif; ?>
 
                     <li class="nav-item">
-    <a class="nav-link" href="index.php?action=projects">Projects</a>
+    <a class="nav-link" href="index.php?action=projects">Core Area</a>
 </li>
                     
                     <!-- Profile link for all users -->

@@ -2,7 +2,7 @@
 
 <div class="row mb-4">
     <div class="col-md-8">
-        <h2>Project Management</h2>
+        <h2>Core Area</h2>
     </div>
     <?php if($_SESSION['role'] == 'admin'): ?>
     <div class="col-md-4 text-end">
@@ -33,17 +33,27 @@
 </div>
 <?php endif; ?>
 
-<!-- Project Summary Cards - Show only encoder's division for non-admins -->
+<!-- Project Summary Cards -->
 <div class="row mb-4">
     <?php if($_SESSION['role'] == 'admin'): ?>
         <?php foreach($project_summary as $summary): ?>
         <div class="col-md-3 mb-3">
-            <div class="card text-white bg-<?php 
-                echo $summary['functional_division'] == 'OSDS' ? 'primary' : 
-                    ($summary['functional_division'] == 'CID' ? 'success' : 
-                    ($summary['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
-            ?>">
-                <div class="card-header"><?php echo $summary['functional_division']; ?> Division</div>
+            <?php 
+            $division = $summary['functional_division'];
+            $bgColor = 'secondary'; // default
+            
+            if($division == 'OSDS') {
+                $bgColor = 'primary';
+            } elseif($division == 'CID') {
+                $bgColor = 'success';
+            } elseif($division == 'SGOD') {
+                $bgColor = 'info';
+            } elseif($division == 'Schools') {
+                $bgColor = 'secondary';
+            }
+            ?>
+            <div class="card text-white bg-<?php echo $bgColor; ?>">
+                <div class="card-header"><?php echo $division; ?> Division</div>
                 <div class="card-body">
                     <h5 class="card-title">Total Projects: <?php echo $summary['total_projects']; ?></h5>
                     <p class="card-text">
@@ -62,12 +72,22 @@
     <?php else: ?>
         <!-- For encoder: Show only their division summary -->
         <div class="col-md-12">
-            <div class="card text-white bg-<?php 
-                echo $_SESSION['functional_division'] == 'OSDS' ? 'primary' : 
-                    ($_SESSION['functional_division'] == 'CID' ? 'success' : 
-                    ($_SESSION['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
-            ?>">
-                <div class="card-header"><?php echo $_SESSION['functional_division']; ?> Division - Your Projects</div>
+            <?php 
+            $division = $_SESSION['functional_division'];
+            $bgColor = 'secondary';
+            
+            if($division == 'OSDS') {
+                $bgColor = 'primary';
+            } elseif($division == 'CID') {
+                $bgColor = 'success';
+            } elseif($division == 'SGOD') {
+                $bgColor = 'info';
+            } elseif($division == 'Schools') {
+                $bgColor = 'secondary';
+            }
+            ?>
+            <div class="card text-white bg-<?php echo $bgColor; ?>">
+                <div class="card-header"><?php echo $division; ?> Division - Your Projects</div>
                 <div class="card-body">
                     <h5 class="card-title">Total Projects: <?php echo $project_summary[0]['total_projects'] ?? 0; ?></h5>
                     <p class="card-text">
@@ -88,21 +108,21 @@
 <!-- Filter Section -->
 <div class="card mb-4">
     <div class="card-header bg-light">
-        <h5 class="mb-0">Filter Tasks</h5>
+        <h5 class="mb-0">Filter Projects</h5>
     </div>
     <div class="card-body">
         <form method="GET" action="index.php" class="row g-3">
-            <input type="hidden" name="action" value="tasks">
+            <input type="hidden" name="action" value="projects">
             
             <div class="col-md-<?php echo $_SESSION['role'] == 'admin' ? '4' : '6'; ?>">
                 <label for="search" class="form-label">Search</label>
                 <input type="text" class="form-control" id="search" name="search" 
-                       placeholder="Search tasks or units..." 
+                       placeholder="Search by project name..." 
                        value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
             </div>
             
             <?php if($_SESSION['role'] == 'admin'): ?>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label for="division" class="form-label">Division</label>
                 <select class="form-select" id="division" name="division">
                     <option value="">All Divisions</option>
@@ -114,7 +134,7 @@
             </div>
             <?php endif; ?>
             
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label for="priority" class="form-label">Priority</label>
                 <select class="form-select" id="priority" name="priority">
                     <option value="">All Priorities</option>
@@ -125,19 +145,9 @@
                 </select>
             </div>
             
-            <div class="col-md-2">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                    <option value="">All Status</option>
-                    <option value="not_started" <?php echo (isset($_GET['status']) && $_GET['status'] == 'not_started') ? 'selected' : ''; ?>>Not Started</option>
-                    <option value="in_progress" <?php echo (isset($_GET['status']) && $_GET['status'] == 'in_progress') ? 'selected' : ''; ?>>In Progress</option>
-                    <option value="completed" <?php echo (isset($_GET['status']) && $_GET['status'] == 'completed') ? 'selected' : ''; ?>>Completed</option>
-                </select>
-            </div>
-            
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
-                <a href="index.php?action=tasks" class="btn btn-secondary">Reset</a>
+                <a href="index.php?action=projects" class="btn btn-secondary">Reset</a>
             </div>
         </form>
     </div>
@@ -176,31 +186,50 @@
                             <td><strong><?php echo $project['project_id']; ?></strong></td>
                             <td><?php echo htmlspecialchars($project['project_name']); ?></td>
                             <td>
-                                <span class="badge bg-<?php 
-                                    echo $project['functional_division'] == 'OSDS' ? 'primary' : 
-                                        ($project['functional_division'] == 'CID' ? 'success' : 
-                                        ($project['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
-                                ?>">
-                                    <?php echo $project['functional_division']; ?>
+                                <?php 
+                                $division = $project['functional_division'] ?? '';
+                                $badgeColor = 'secondary';
+                                
+                                if($division == 'OSDS') {
+                                    $badgeColor = 'primary';
+                                } elseif($division == 'CID') {
+                                    $badgeColor = 'success';
+                                } elseif($division == 'SGOD') {
+                                    $badgeColor = 'info';
+                                } elseif($division == 'Schools') {
+                                    $badgeColor = 'secondary';
+                                }
+                                ?>
+                                <span class="badge bg-<?php echo $badgeColor; ?>">
+                                    <?php echo !empty($division) ? htmlspecialchars($division) : 'N/A'; ?>
                                 </span>
                             </td>
                             <td><?php echo htmlspecialchars($project['project_lead'] ?? 'N/A'); ?></td>
                             <td>
-                                <span class="badge bg-<?php 
-                                    echo $project['priority'] == 'critical' ? 'danger' : 
-                                        ($project['priority'] == 'high' ? 'warning' : 
-                                        ($project['priority'] == 'medium' ? 'info' : 'secondary')); 
-                                ?>">
-                                    <?php echo ucfirst($project['priority'] ?? 'medium'); ?>
+                                <?php 
+                                $priority = $project['priority'] ?? 'medium';
+                                $priorityColor = 'secondary';
+                                
+                                if($priority == 'critical') {
+                                    $priorityColor = 'danger';
+                                } elseif($priority == 'high') {
+                                    $priorityColor = 'warning';
+                                } elseif($priority == 'medium') {
+                                    $priorityColor = 'info';
+                                }
+                                ?>
+                                <span class="badge bg-<?php echo $priorityColor; ?>">
+                                    <?php echo ucfirst($priority); ?>
                                 </span>
                             </td>
                             <td style="min-width: 120px;">
                                 <div class="progress" style="height: 20px;">
+                                    <?php $progress = $project['progress_percentage'] ?? 0; ?>
                                     <div class="progress-bar bg-<?php 
-                                        echo $project['progress_percentage'] >= 100 ? 'success' : 
-                                            ($project['progress_percentage'] >= 50 ? 'info' : 'warning'); 
-                                    ?>" style="width: <?php echo $project['progress_percentage']; ?>%">
-                                        <?php echo $project['progress_percentage']; ?>%
+                                        echo $progress >= 100 ? 'success' : 
+                                            ($progress >= 50 ? 'info' : 'warning'); 
+                                    ?>" style="width: <?php echo $progress; ?>%">
+                                        <?php echo $progress; ?>%
                                     </div>
                                 </div>
                                 <small class="text-muted">
