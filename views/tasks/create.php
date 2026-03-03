@@ -68,6 +68,14 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
+    <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" id="year" name="year" 
+           placeholder="e.g., 2024, 2025, SY 2024-2025" 
+           value="<?php echo date('Y'); ?>" required>
+    <small class="text-muted">Enter the year for this commitment</small>
+</div>
+
+                    <div class="col-md-6 mb-3">
                         <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
                         <select class="form-select" id="priority" name="priority" required>
                             <option value="low">Low</option>

@@ -4,237 +4,263 @@ require_once __DIR__ . '/Database.php';
 class Project extends DatabaseModel {
     private $table = "tbl_projects";
 
-    // READ - Get all projects with filters
-    public function getAllProjects($filters = [], $limit = 10, $offset = 0) {
-        $query = "SELECT p.*, 
-                  COUNT(DISTINCT pu.unit_id) as total_units,
-                  COUNT(DISTINCT t.task_id) as total_tasks,
-                  (SELECT COUNT(*) FROM tbl_task WHERE project_id = p.project_id AND 
-                    (SELECT percentage FROM tbl_status WHERE task_id = tbl_task.task_id ORDER BY created_at DESC LIMIT 1) >= 100) as completed_tasks
-                  FROM " . $this->table . " p
-                  LEFT JOIN tbl_project_units pu ON p.project_id = pu.project_id
-                  LEFT JOIN tbl_task t ON p.project_id = t.project_id
-                  WHERE 1=1";
-        
-        $params = [];
-        
-        // Apply filters
-        if(!empty($filters['search'])) {
-            $query .= " AND (p.project_name LIKE :search OR p.project_code LIKE :search OR p.project_description LIKE :search)";
-            $params[':search'] = '%' . $filters['search'] . '%';
-        }
-        
-        if(!empty($filters['division'])) {
-            $query .= " AND p.functional_division = :division";
-            $params[':division'] = $filters['division'];
-        }
-        
-        if(!empty($filters['status'])) {
-            $query .= " AND p.status = :status";
-            $params[':status'] = $filters['status'];
-        }
-        
-        if(!empty($filters['priority'])) {
-            $query .= " AND p.priority = :priority";
-            $params[':priority'] = $filters['priority'];
-        }
-        
-        $query .= " GROUP BY p.project_id ORDER BY p.created_at DESC";
-        
-        // Add pagination
-        $query .= " LIMIT :limit OFFSET :offset";
-        
+    // Get distinct years for filter dropdown
+    public function getDistinctYears() {
+        $query = "SELECT DISTINCT year FROM " . $this->table . " ORDER BY year DESC";
         $stmt = $this->getConnection()->prepare($query);
-        
-        // Bind parameters
-        foreach($params as $key => &$val) {
-            $stmt->bindParam($key, $val);
-        }
-        
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function getTotalProjectCount($filters = []) {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE 1=1";
-        
-        $params = [];
-        
-        if(!empty($filters['search'])) {
-            $query .= " AND (project_name LIKE :search OR project_code LIKE :search OR project_description LIKE :search)";
-            $params[':search'] = '%' . $filters['search'] . '%';
-        }
-        
-        if(!empty($filters['division'])) {
-            $query .= " AND functional_division = :division";
-            $params[':division'] = $filters['division'];
-        }
-        
-        if(!empty($filters['status'])) {
-            $query .= " AND status = :status";
-            $params[':status'] = $filters['status'];
-        }
-        
-        if(!empty($filters['priority'])) {
-            $query .= " AND priority = :priority";
-            $params[':priority'] = $filters['priority'];
-        }
-        
-        $stmt = $this->getConnection()->prepare($query);
-        
-        foreach($params as $key => &$val) {
-            $stmt->bindParam($key, $val);
-        }
-        
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['total'];
-    }
-
-    // READ - Get single project by ID
-    public function getProjectById($project_id) {
+    // READ - Get all projects with filters (UPDATED with year filter)
+public function getAllProjects($filters = [], $limit = 10, $offset = 0) {
     $query = "SELECT p.*, 
-              GROUP_CONCAT(DISTINCT u.id) as unit_ids,
-              GROUP_CONCAT(DISTINCT u.unit_name SEPARATOR '||') as unit_names,
+              COUNT(DISTINCT pu.unit_id) as total_units,
               COUNT(DISTINCT t.task_id) as total_tasks,
-              SUM(CASE WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) >= 100 THEN 1 ELSE 0 END) as completed_tasks,
-              ROUND(AVG(CASE 
-                  WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) IS NOT NULL 
-                  THEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1)
-                  ELSE 0 
-              END), 2) as avg_progress
+              (SELECT COUNT(*) FROM tbl_task WHERE project_id = p.project_id AND 
+                (SELECT percentage FROM tbl_status WHERE task_id = tbl_task.task_id ORDER BY created_at DESC LIMIT 1) >= 100) as completed_tasks,
+              COALESCE(p.progress_percentage, 0) as progress_percentage
               FROM " . $this->table . " p
               LEFT JOIN tbl_project_units pu ON p.project_id = pu.project_id
-              LEFT JOIN tbl_units u ON pu.unit_id = u.id
               LEFT JOIN tbl_task t ON p.project_id = t.project_id
-              WHERE p.project_id = :project_id
-              GROUP BY p.project_id";
+              WHERE 1=1";
+    
+    $params = [];
+    
+    // Apply filters
+    if(!empty($filters['search'])) {
+        $query .= " AND (p.project_name LIKE :search OR p.project_description LIKE :search)";
+        $params[':search'] = '%' . $filters['search'] . '%';
+    }
+    
+    if(!empty($filters['division'])) {
+        $query .= " AND p.functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['status'])) {
+        $query .= " AND p.status = :status";
+        $params[':status'] = $filters['status'];
+    }
+    
+    if(!empty($filters['priority'])) {
+        $query .= " AND p.priority = :priority";
+        $params[':priority'] = $filters['priority'];
+    }
+    
+    if(!empty($filters['year'])) {
+        $query .= " AND p.year = :year";
+        $params[':year'] = $filters['year'];
+    }
+    
+    $query .= " GROUP BY p.project_id ORDER BY p.year DESC, p.created_at DESC";
+    
+    // Add pagination
+    $query .= " LIMIT :limit OFFSET :offset";
     
     $stmt = $this->getConnection()->prepare($query);
-    $stmt->bindParam(':project_id', $project_id);
+    
+    // Bind parameters
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+    
     $stmt->execute();
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-    // CREATE - Add new project
-    public function createProject($data, $unit_ids = []) {
-        // Check if project code already exists
-        if($this->projectCodeExists($data['project_code'])) {
-            return ['success' => false, 'message' => 'Project code already exists'];
-        }
+    public function getTotalProjectCount($filters = []) {
+    $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE 1=1";
+    
+    $params = [];
+    
+    if(!empty($filters['search'])) {
+        $query .= " AND (project_name LIKE :search OR project_description LIKE :search)";
+        $params[':search'] = '%' . $filters['search'] . '%';
+    }
+    
+    if(!empty($filters['division'])) {
+        $query .= " AND functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['status'])) {
+        $query .= " AND status = :status";
+        $params[':status'] = $filters['status'];
+    }
+    
+    if(!empty($filters['priority'])) {
+        $query .= " AND priority = :priority";
+        $params[':priority'] = $filters['priority'];
+    }
+    
+    if(!empty($filters['year'])) {
+        $query .= " AND year = :year";
+        $params[':year'] = $filters['year'];
+    }
+    
+    $stmt = $this->getConnection()->prepare($query);
+    
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+    // READ - Get single project by ID (UPDATED to include year)
+    public function getProjectById($project_id) {
+        $query = "SELECT p.*, 
+                  GROUP_CONCAT(DISTINCT u.id) as unit_ids,
+                  GROUP_CONCAT(DISTINCT u.unit_name SEPARATOR '||') as unit_names,
+                  COUNT(DISTINCT t.task_id) as total_tasks,
+                  SUM(CASE WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) >= 100 THEN 1 ELSE 0 END) as completed_tasks,
+                  ROUND(AVG(CASE 
+                      WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) IS NOT NULL 
+                      THEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1)
+                      ELSE 0 
+                  END), 2) as avg_progress
+                  FROM " . $this->table . " p
+                  LEFT JOIN tbl_project_units pu ON p.project_id = pu.project_id
+                  LEFT JOIN tbl_units u ON pu.unit_id = u.id
+                  LEFT JOIN tbl_task t ON p.project_id = t.project_id
+                  WHERE p.project_id = :project_id
+                  GROUP BY p.project_id";
         
-        $this->getConnection()->beginTransaction();
-        
-        try {
-            $query = "INSERT INTO " . $this->table . " 
-          (project_code, project_name, project_description, functional_division, 
-           project_lead, lead_designation, target_end_date, 
-           budget_allocation, priority, status, created_by) 
-          VALUES 
-          (:project_code, :project_name, :project_description, :functional_division,
-           :project_lead, :lead_designation, :target_end_date,
-           :budget_allocation, :priority, :status, :created_by)";
-            
-            $stmt = $this->getConnection()->prepare($query);
-            
-            $success = $stmt->execute([
-    ':project_code' => $data['project_code'],
-    ':project_name' => $data['project_name'],
-    ':project_description' => $data['project_description'] ?? null,
-    ':functional_division' => $data['functional_division'],
-    ':project_lead' => $data['project_lead'] ?? null,
-    ':lead_designation' => $data['lead_designation'] ?? null,
-    ':target_end_date' => $data['target_end_date'] ?? null,
-    ':budget_allocation' => $data['budget_allocation'] ?? 0,
-    ':priority' => $data['priority'] ?? 'medium',
-    ':status' => $data['status'] ?? 'planning',
-    ':created_by' => $data['created_by']
-]);
-            
-            if(!$success) {
-                throw new Exception("Failed to create project");
-            }
-            
-            $project_id = $this->getConnection()->lastInsertId();
-            
-            // Link units to project
-            if(!empty($unit_ids)) {
-                $this->linkUnitsToProject($project_id, $unit_ids);
-            }
-            
-            $this->getConnection()->commit();
-            return ['success' => true, 'message' => 'Project created successfully', 'id' => $project_id];
-            
-        } catch (Exception $e) {
-            $this->getConnection()->rollBack();
-            return ['success' => false, 'message' => 'Failed to create project: ' . $e->getMessage()];
-        }
+        $stmt = $this->getConnection()->prepare($query);
+        $stmt->bindParam(':project_id', $project_id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // UPDATE - Update project
-    public function updateProject($project_id, $data, $unit_ids = []) {
-        // Check if project code already exists (excluding current project)
-        if(isset($data['project_code']) && $this->projectCodeExists($data['project_code'], $project_id)) {
-            return ['success' => false, 'message' => 'Project code already exists'];
-        }
-        
-        $this->getConnection()->beginTransaction();
-        
-        try {
-            $query = "UPDATE " . $this->table . " 
-          SET project_code = :project_code,
-              project_name = :project_name,
-              project_description = :project_description,
-              functional_division = :functional_division,
-              project_lead = :project_lead,
-              lead_designation = :lead_designation,
-              target_end_date = :target_end_date,
-              budget_allocation = :budget_allocation,
-              priority = :priority,
-              status = :status
-          WHERE project_id = :project_id";
-            
-            $stmt = $this->getConnection()->prepare($query);
-            
-            $success = $stmt->execute([
-    ':project_id' => $project_id,
-    ':project_code' => $data['project_code'],
-    ':project_name' => $data['project_name'],
-    ':project_description' => $data['project_description'] ?? null,
-    ':functional_division' => $data['functional_division'],
-    ':project_lead' => $data['project_lead'] ?? null,
-    ':lead_designation' => $data['lead_designation'] ?? null,
-    ':target_end_date' => $data['target_end_date'] ?? null,
-    ':budget_allocation' => $data['budget_allocation'] ?? 0,
-    ':priority' => $data['priority'] ?? 'medium',
-    ':status' => $data['status'] ?? 'planning'
-]);
-            
-            if(!$success) {
-                throw new Exception("Failed to update project");
-            }
-            
-            // Update project units
-            if(!empty($unit_ids)) {
-                // Remove existing links
-                $this->removeAllUnitsFromProject($project_id);
-                // Add new links
-                $this->linkUnitsToProject($project_id, $unit_ids);
-            }
-            
-            $this->getConnection()->commit();
-            return ['success' => true, 'message' => 'Project updated successfully'];
-            
-        } catch (Exception $e) {
-            $this->getConnection()->rollBack();
-            return ['success' => false, 'message' => 'Failed to update project: ' . $e->getMessage()];
-        }
+    // CREATE - Add new project (UPDATED to properly handle year)
+// CREATE - Add new project (UPDATED to properly handle year)
+public function createProject($data, $unit_ids = []) {
+    // Check if project code already exists
+    if($this->projectCodeExists($data['project_code'])) {
+        return ['success' => false, 'message' => 'Project code already exists'];
     }
+    
+    $this->getConnection()->beginTransaction();
+    
+    try {
+        // Use the year from form data, don't force current year
+        $year = $data['year'] ?? ''; // Remove the date('Y') default
+        
+        $query = "INSERT INTO " . $this->table . " 
+              (project_code, project_name, project_description, functional_division, year,
+               project_lead, lead_designation, target_end_date, 
+               budget_allocation, priority, status, created_by) 
+              VALUES 
+              (:project_code, :project_name, :project_description, :functional_division, :year,
+               :project_lead, :lead_designation, :target_end_date,
+               :budget_allocation, :priority, :status, :created_by)";
+        
+        $stmt = $this->getConnection()->prepare($query);
+        
+        $success = $stmt->execute([
+            ':project_code' => $data['project_code'],
+            ':project_name' => $data['project_name'],
+            ':project_description' => $data['project_description'] ?? null,
+            ':functional_division' => $data['functional_division'],
+            ':year' => $year, // This will now be whatever the user entered
+            ':project_lead' => $data['project_lead'] ?? null,
+            ':lead_designation' => $data['lead_designation'] ?? null,
+            ':target_end_date' => $data['target_end_date'] ?? null,
+            ':budget_allocation' => $data['budget_allocation'] ?? 0,
+            ':priority' => $data['priority'] ?? 'medium',
+            ':status' => $data['status'] ?? 'planning',
+            ':created_by' => $data['created_by']
+        ]);
+        
+        if(!$success) {
+            throw new Exception("Failed to create project");
+        }
+        
+        $project_id = $this->getConnection()->lastInsertId();
+        
+        // Link units to project
+        if(!empty($unit_ids)) {
+            $this->linkUnitsToProject($project_id, $unit_ids);
+        }
+        
+        $this->getConnection()->commit();
+        return ['success' => true, 'message' => 'Project created successfully', 'id' => $project_id];
+        
+    } catch (Exception $e) {
+        $this->getConnection()->rollBack();
+        return ['success' => false, 'message' => 'Failed to create project: ' . $e->getMessage()];
+    }
+}
 
-    // DELETE - Delete project
+    // UPDATE - Update project (UPDATED to properly handle year)
+public function updateProject($project_id, $data, $unit_ids = []) {
+    // Check if project code already exists (excluding current project)
+    if(isset($data['project_code']) && $this->projectCodeExists($data['project_code'], $project_id)) {
+        return ['success' => false, 'message' => 'Project code already exists'];
+    }
+    
+    $this->getConnection()->beginTransaction();
+    
+    try {
+        $query = "UPDATE " . $this->table . " 
+              SET project_code = :project_code,
+                  project_name = :project_name,
+                  project_description = :project_description,
+                  functional_division = :functional_division,
+                  year = :year,
+                  project_lead = :project_lead,
+                  lead_designation = :lead_designation,
+                  target_end_date = :target_end_date,
+                  budget_allocation = :budget_allocation,
+                  priority = :priority,
+                  status = :status
+              WHERE project_id = :project_id";
+        
+        $stmt = $this->getConnection()->prepare($query);
+        
+        $success = $stmt->execute([
+            ':project_id' => $project_id,
+            ':project_code' => $data['project_code'],
+            ':project_name' => $data['project_name'],
+            ':project_description' => $data['project_description'] ?? null,
+            ':functional_division' => $data['functional_division'],
+            ':year' => $data['year'] ?? '', // Remove the date('Y') default
+            ':project_lead' => $data['project_lead'] ?? null,
+            ':lead_designation' => $data['lead_designation'] ?? null,
+            ':target_end_date' => $data['target_end_date'] ?? null,
+            ':budget_allocation' => $data['budget_allocation'] ?? 0,
+            ':priority' => $data['priority'] ?? 'medium',
+            ':status' => $data['status'] ?? 'planning'
+        ]);
+        
+        if(!$success) {
+            throw new Exception("Failed to update project");
+        }
+        
+        // Update project units
+        if(!empty($unit_ids)) {
+            // Remove existing links
+            $this->removeAllUnitsFromProject($project_id);
+            // Add new links
+            $this->linkUnitsToProject($project_id, $unit_ids);
+        }
+        
+        $this->getConnection()->commit();
+        return ['success' => true, 'message' => 'Project updated successfully'];
+        
+    } catch (Exception $e) {
+        $this->getConnection()->rollBack();
+        return ['success' => false, 'message' => 'Failed to update project: ' . $e->getMessage()];
+    }
+}
+
+    // DELETE - Delete project (unchanged)
     public function deleteProject($project_id) {
         // Check if project has tasks
         $query = "SELECT COUNT(*) as total FROM tbl_task WHERE project_id = :project_id";
@@ -259,24 +285,23 @@ class Project extends DatabaseModel {
         }
     }
 
-    // Helper methods for project units
-    // Change from private to public
-public function linkUnitsToProject($project_id, $unit_ids) {
-    $query = "INSERT INTO tbl_project_units (project_id, unit_id) VALUES ";
-    $values = [];
-    $params = [];
-    
-    foreach($unit_ids as $index => $unit_id) {
-        $values[] = "(:project_id, :unit_id{$index})";
-        $params[":unit_id{$index}"] = $unit_id;
+    // Helper methods for project units (unchanged)
+    public function linkUnitsToProject($project_id, $unit_ids) {
+        $query = "INSERT INTO tbl_project_units (project_id, unit_id) VALUES ";
+        $values = [];
+        $params = [];
+        
+        foreach($unit_ids as $index => $unit_id) {
+            $values[] = "(:project_id, :unit_id{$index})";
+            $params[":unit_id{$index}"] = $unit_id;
+        }
+        
+        $query .= implode(", ", $values);
+        $stmt = $this->getConnection()->prepare($query);
+        $params[':project_id'] = $project_id;
+        
+        return $stmt->execute($params);
     }
-    
-    $query .= implode(", ", $values);
-    $stmt = $this->getConnection()->prepare($query);
-    $params[':project_id'] = $project_id;
-    
-    return $stmt->execute($params);
-}
 
     private function removeAllUnitsFromProject($project_id) {
         $query = "DELETE FROM tbl_project_units WHERE project_id = :project_id";
@@ -310,33 +335,44 @@ public function linkUnitsToProject($project_id, $unit_ids) {
         return $stmt->fetchColumn() > 0;
     }
 
-    // Get project summary by division
-    // Get project summary by division
-public function getProjectSummary() {
-    $query = "SELECT 
-                functional_division,
-                COUNT(*) as total_projects,
-                SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as ongoing_projects,
-                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_projects,
-                SUM(CASE WHEN status = 'planning' THEN 1 ELSE 0 END) as planning_projects,
-                COALESCE(AVG(progress_percentage), 0) as avg_progress
-              FROM " . $this->table . " 
-              GROUP BY functional_division
-              ORDER BY functional_division";
-    
-    $stmt = $this->getConnection()->prepare($query);
-    $stmt->execute();
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // If no results, return empty array
-    if(empty($results)) {
-        return [];
+    // Get project summary by division (UPDATED to include year filter optionally)
+    public function getProjectSummary($year = null) {
+        $query = "SELECT 
+                    functional_division,
+                    COUNT(*) as total_projects,
+                    SUM(CASE WHEN status = 'ongoing' THEN 1 ELSE 0 END) as ongoing_projects,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_projects,
+                    SUM(CASE WHEN status = 'planning' THEN 1 ELSE 0 END) as planning_projects,
+                    COALESCE(AVG(progress_percentage), 0) as avg_progress
+                  FROM " . $this->table;
+        
+        $params = [];
+        
+        if($year) {
+            $query .= " WHERE year = :year";
+            $params[':year'] = $year;
+        }
+        
+        $query .= " GROUP BY functional_division ORDER BY functional_division";
+        
+        $stmt = $this->getConnection()->prepare($query);
+        
+        foreach($params as $key => &$val) {
+            $stmt->bindParam($key, $val);
+        }
+        
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // If no results, return empty array
+        if(empty($results)) {
+            return [];
+        }
+        
+        return $results;
     }
-    
-    return $results;
-}
 
-    // Get projects for a specific unit
+    // Get projects for a specific unit (unchanged)
     public function getProjectsByUnit($unit_id) {
         $query = "SELECT p.* FROM " . $this->table . " p
                   INNER JOIN tbl_project_units pu ON p.project_id = pu.project_id
@@ -349,17 +385,17 @@ public function getProjectSummary() {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
     public function getProjectsForDropdown() {
     $query = "SELECT 
                 project_id as id, 
                 project_name, 
                 functional_division, 
+                year,
                 target_end_date, 
                 budget_allocation 
               FROM " . $this->table . " 
               WHERE status != 'cancelled' 
-              ORDER BY project_name ASC";
+              ORDER BY year DESC, project_name ASC";
     
     $stmt = $this->getConnection()->prepare($query);
     $stmt->execute();

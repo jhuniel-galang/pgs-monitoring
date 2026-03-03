@@ -105,7 +105,7 @@
     <?php endif; ?>
 </div>
 
-<!-- Filter Section -->
+<!-- Filter Section - Change year dropdown to text input -->
 <div class="card mb-4">
     <div class="card-header bg-light">
         <h5 class="mb-0">Filter Projects</h5>
@@ -114,7 +114,7 @@
         <form method="GET" action="index.php" class="row g-3">
             <input type="hidden" name="action" value="projects">
             
-            <div class="col-md-<?php echo $_SESSION['role'] == 'admin' ? '4' : '6'; ?>">
+            <div class="col-md-3">
                 <label for="search" class="form-label">Search</label>
                 <input type="text" class="form-control" id="search" name="search" 
                        placeholder="Search by project name..." 
@@ -122,7 +122,7 @@
             </div>
             
             <?php if($_SESSION['role'] == 'admin'): ?>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="division" class="form-label">Division</label>
                 <select class="form-select" id="division" name="division">
                     <option value="">All Divisions</option>
@@ -134,7 +134,14 @@
             </div>
             <?php endif; ?>
             
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <label for="year" class="form-label">Year</label>
+                <input type="text" class="form-control" id="year" name="year" 
+                       placeholder="e.g., 2024, 2025, etc." 
+                       value="<?php echo htmlspecialchars($_GET['year'] ?? ''); ?>">
+            </div>
+            
+            <div class="col-md-2">
                 <label for="priority" class="form-label">Priority</label>
                 <select class="form-select" id="priority" name="priority">
                     <option value="">All Priorities</option>
@@ -145,7 +152,7 @@
                 </select>
             </div>
             
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
                 <a href="index.php?action=projects" class="btn btn-secondary">Reset</a>
             </div>
@@ -153,7 +160,7 @@
     </div>
 </div>
 
-<!-- Projects Table -->
+<!-- Projects Table - Add Year column -->
 <div class="card">
     <div class="card-header">
         <h5>Core Area (<?php echo $total_projects; ?> projects found)</h5>
@@ -169,6 +176,7 @@
                         <th>ID</th>
                         <th>Project Name</th>
                         <th>Division</th>
+                        <th>Year</th>
                         <th>Project Lead</th>
                         <th>Priority</th>
                         <th>Progress</th>
@@ -178,7 +186,7 @@
                 <tbody>
                     <?php if(empty($projects)): ?>
                     <tr>
-                        <td colspan="7" class="text-center">No projects found matching your filters.</td>
+                        <td colspan="8" class="text-center">No projects found matching your filters.</td>
                     </tr>
                     <?php else: ?>
                         <?php foreach($projects as $project): ?>
@@ -203,6 +211,13 @@
                                 <span class="badge bg-<?php echo $badgeColor; ?>">
                                     <?php echo !empty($division) ? htmlspecialchars($division) : 'N/A'; ?>
                                 </span>
+                            </td>
+                            <td>
+                                <?php if(!empty($project['year'])): ?>
+                                    <span class="badge bg-dark"><?php echo htmlspecialchars($project['year']); ?></span>
+                                <?php else: ?>
+                                    <span class="text-muted">—</span>
+                                <?php endif; ?>
                             </td>
                             <td><?php echo htmlspecialchars($project['project_lead'] ?? 'N/A'); ?></td>
                             <td>
@@ -263,13 +278,13 @@
             </table>
         </div>
         
-        <!-- Pagination -->
+        <!-- Pagination - Update with year parameter -->
         <?php if($total_pages > 1): ?>
         <nav aria-label="Project pagination" class="mt-4">
             <ul class="pagination justify-content-center">
                 <?php if($page > 1): ?>
                 <li class="page-item">
-                    <a class="page-link" href="?action=projects&page=<?php echo ($page-1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>">
+                    <a class="page-link" href="?action=projects&page=<?php echo ($page-1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&year=<?php echo urlencode($_GET['year'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>">
                         Previous
                     </a>
                 </li>
@@ -277,7 +292,7 @@
                 
                 <?php for($i = 1; $i <= $total_pages; $i++): ?>
                 <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                    <a class="page-link" href="?action=projects&page=<?php echo $i; ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>">
+                    <a class="page-link" href="?action=projects&page=<?php echo $i; ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&year=<?php echo urlencode($_GET['year'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>">
                         <?php echo $i; ?>
                     </a>
                 </li>
@@ -285,7 +300,7 @@
                 
                 <?php if($page < $total_pages): ?>
                 <li class="page-item">
-                    <a class="page-link" href="?action=projects&page=<?php echo ($page+1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>">
+                    <a class="page-link" href="?action=projects&page=<?php echo ($page+1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&year=<?php echo urlencode($_GET['year'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>">
                         Next
                     </a>
                 </li>
@@ -296,7 +311,7 @@
     </div>
 </div>
 
-<!-- Create Project Modal - Only for admin -->
+<!-- Create Project Modal - Change year to text input -->
 <?php if($_SESSION['role'] == 'admin'): ?>
 <div class="modal fade" id="createProjectModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -330,6 +345,14 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
+                            <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="year" name="year" 
+                                placeholder="e.g., 2024, 2025, SY 2024-2025" 
+                                value="<?php echo date('Y'); ?>" required>
+                            <small class="text-muted">Enter the year for this core area</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
                             <label for="project_lead" class="form-label">Project Lead</label>
                             <input type="text" class="form-control" id="project_lead" name="project_lead">
                         </div>
@@ -355,7 +378,7 @@
 </div>
 <?php endif; ?>
 
-<!-- Edit Project Modals - Only for admin -->
+<!-- Edit Project Modals - Change year to text input -->
 <?php if($_SESSION['role'] == 'admin'): ?>
     <?php foreach($projects as $project): ?>
     <div class="modal fade" id="editProjectModal<?php echo $project['project_id']; ?>" tabindex="-1">
@@ -382,7 +405,7 @@
                                           name="project_description" rows="3"><?php echo htmlspecialchars($project['project_description'] ?? ''); ?></textarea>
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="edit_division_<?php echo $project['project_id']; ?>" class="form-label">Division <span class="text-danger">*</span></label>
                                 <select class="form-select" id="edit_division_<?php echo $project['project_id']; ?>" 
                                         name="functional_division" required>
@@ -393,7 +416,15 @@
                                 </select>
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
+                                <label for="edit_year_<?php echo $project['project_id']; ?>" class="form-label">Year <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit_year_<?php echo $project['project_id']; ?>" 
+                                    name="year" value="<?php echo htmlspecialchars($project['year'] ?? date('Y')); ?>" 
+                                    placeholder="e.g., 2024, 2025, SY 2024-2025" required>
+                                <small class="text-muted">Enter the year for this core area</small>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
                                 <label for="edit_project_lead_<?php echo $project['project_id']; ?>" class="form-label">Project Lead</label>
                                 <input type="text" class="form-control" id="edit_project_lead_<?php echo $project['project_id']; ?>" 
                                        name="project_lead" value="<?php echo htmlspecialchars($project['project_lead'] ?? ''); ?>">
@@ -420,7 +451,7 @@
     </div>
     <?php endforeach; ?>
 
-    <!-- Delete Project Modals -->
+    <!-- Delete Project Modals (unchanged) -->
     <?php foreach($projects as $project): ?>
     <div class="modal fade" id="deleteProjectModal<?php echo $project['project_id']; ?>" tabindex="-1">
         <div class="modal-dialog">

@@ -5,17 +5,18 @@
     
     <table class="table table-striped table-hover">
         <thead>
-            <tr>
-                <th>Commitments</th>
-                <th>Division</th>
-                <th>Unit</th>
-                <th>Target Date</th>
-                <th>Priority</th>
-                <th>Progress</th>
-                <th>Last Update</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+    <tr>
+        <th>Commitments</th>
+        <th>Division</th>
+        <th>Unit</th>
+        <th>Year</th>
+        <th>Target Date</th>
+        <th>Priority</th>
+        <th>Progress</th>
+        <th>Last Update</th>
+        <th>Actions</th>
+    </tr>
+</thead>
         <tbody>
             <?php foreach($filtered_tasks as $task): 
                 // Determine the correct task ID field
@@ -66,6 +67,14 @@
                     }
                     ?>
                 </td>
+
+                <td>
+    <?php if(!empty($task['year'])): ?>
+        <span class="badge bg-dark"><?php echo htmlspecialchars($task['year']); ?></span>
+    <?php else: ?>
+        <span class="text-muted">—</span>
+    <?php endif; ?>
+</td>
                 <td><?php echo htmlspecialchars($task['target_completion_date'] ?? 'N/A'); ?></td>
                 <td>
                     <span class="badge bg-<?php 

@@ -20,125 +20,127 @@ class ProjectController {
         }
     }
 
-    // List all projects
-    public function index() {
-        $user = $this->auth->getCurrentUser();
-        
-        // Pagination settings
-        $limit = 10;
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $offset = ($page - 1) * $limit;
-        
-        // Build filters
-        $filters = [
-            'search' => $_GET['search'] ?? '',
-            'division' => $_GET['division'] ?? '',
-            'status' => $_GET['status'] ?? '',
-            'priority' => $_GET['priority'] ?? ''
-        ];
-        
-        // Add role-based filter for encoders
-        if($user['role'] == 'encoder') {
-            $filters['division'] = $user['functional_division'];
-        }
-        
-        // Get filtered projects
-        $projects = $this->project->getAllProjects($filters, $limit, $offset);
-        $total_projects = $this->project->getTotalProjectCount($filters);
-        $total_pages = ceil($total_projects / $limit);
-        
-        // Get summary for cards
-        $project_summary = $this->project->getProjectSummary();
-        
-        // Get all units for the project modals
-        $units = $this->unit->getAllUnits();
-        
-        require_once __DIR__ . '/../views/projects/index.php';
+
+// List all projects
+public function index() {
+    $user = $this->auth->getCurrentUser();
+    
+    // Pagination settings
+    $limit = 10;
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $offset = ($page - 1) * $limit;
+    
+    // Build filters
+    $filters = [
+        'search' => $_GET['search'] ?? '',
+        'division' => $_GET['division'] ?? '',
+        'priority' => $_GET['priority'] ?? '',
+        'year' => $_GET['year'] ?? '' // Add year filter as text
+    ];
+    
+    // Add role-based filter for encoders
+    if($user['role'] == 'encoder') {
+        $filters['division'] = $user['functional_division'];
     }
+    
+    // Get filtered projects
+    $projects = $this->project->getAllProjects($filters, $limit, $offset);
+    $total_projects = $this->project->getTotalProjectCount($filters);
+    $total_pages = ceil($total_projects / $limit);
+    
+    // Get summary for cards
+    $project_summary = $this->project->getProjectSummary();
+    
+    // Get all units for the project modals
+    $units = $this->unit->getAllUnits();
+    
+    require_once __DIR__ . '/../views/projects/index.php';
+}
 
     // Store new project
-    public function store() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $user = $this->auth->getCurrentUser();
-            
-            if($user['role'] != 'admin') {
-                $_SESSION['error'] = "Unauthorized access";
-                header("Location: index.php?action=projects");
-                exit();
-            }
-            
-            $data = [
-                'project_code' => $_POST['project_code'],
-                'project_name' => $_POST['project_name'],
-                'project_description' => $_POST['project_description'] ?? null,
-                'functional_division' => $_POST['functional_division'],
-                'project_lead' => $_POST['project_lead'] ?? null,
-                'lead_designation' => $_POST['lead_designation'] ?? null,
-                'start_date' => $_POST['start_date'] ?? null,
-                'target_end_date' => $_POST['target_end_date'] ?? null,
-                'budget_allocation' => $_POST['budget_allocation'] ?? 0,
-                'priority' => $_POST['priority'] ?? 'medium',
-                'status' => $_POST['status'] ?? 'planning',
-                'created_by' => $_SESSION['user_id']
-            ];
-            
-            $unit_ids = $_POST['unit_ids'] ?? [];
-            
-            $result = $this->project->createProject($data, $unit_ids);
-            
-            if($result['success']) {
-                $_SESSION['success'] = $result['message'];
-            } else {
-                $_SESSION['error'] = $result['message'];
-            }
-            
+public function store() {
+    if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $user = $this->auth->getCurrentUser();
+        
+        if($user['role'] != 'admin') {
+            $_SESSION['error'] = "Unauthorized access";
             header("Location: index.php?action=projects");
             exit();
         }
+        
+        $data = [
+            'project_code' => $_POST['project_code'],
+            'project_name' => $_POST['project_name'],
+            'project_description' => $_POST['project_description'] ?? null,
+            'functional_division' => $_POST['functional_division'],
+            'year' => $_POST['year'] ?? '', // ADD THIS LINE - include the year field
+            'project_lead' => $_POST['project_lead'] ?? null,
+            'lead_designation' => $_POST['lead_designation'] ?? null,
+            'start_date' => $_POST['start_date'] ?? null,
+            'target_end_date' => $_POST['target_end_date'] ?? null,
+            'budget_allocation' => $_POST['budget_allocation'] ?? 0,
+            'priority' => $_POST['priority'] ?? 'medium',
+            'status' => $_POST['status'] ?? 'planning',
+            'created_by' => $_SESSION['user_id']
+        ];
+        
+        $unit_ids = $_POST['unit_ids'] ?? [];
+        
+        $result = $this->project->createProject($data, $unit_ids);
+        
+        if($result['success']) {
+            $_SESSION['success'] = $result['message'];
+        } else {
+            $_SESSION['error'] = $result['message'];
+        }
+        
+        header("Location: index.php?action=projects");
+        exit();
     }
+}
 
     // Update project
-    public function update() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $user = $this->auth->getCurrentUser();
-            
-            if($user['role'] != 'admin') {
-                $_SESSION['error'] = "Unauthorized access";
-                header("Location: index.php?action=projects");
-                exit();
-            }
-            
-            $project_id = $_POST['project_id'];
-            
-            $data = [
-                'project_code' => $_POST['project_code'],
-                'project_name' => $_POST['project_name'],
-                'project_description' => $_POST['project_description'] ?? null,
-                'functional_division' => $_POST['functional_division'],
-                'project_lead' => $_POST['project_lead'] ?? null,
-                'lead_designation' => $_POST['lead_designation'] ?? null,
-                'start_date' => $_POST['start_date'] ?? null,
-                'target_end_date' => $_POST['target_end_date'] ?? null,
-                'budget_allocation' => $_POST['budget_allocation'] ?? 0,
-                'priority' => $_POST['priority'] ?? 'medium',
-                'status' => $_POST['status'] ?? 'planning'
-            ];
-            
-            $unit_ids = $_POST['unit_ids'] ?? [];
-            
-            $result = $this->project->updateProject($project_id, $data, $unit_ids);
-            
-            if($result['success']) {
-                $_SESSION['success'] = $result['message'];
-            } else {
-                $_SESSION['error'] = $result['message'];
-            }
-            
+public function update() {
+    if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $user = $this->auth->getCurrentUser();
+        
+        if($user['role'] != 'admin') {
+            $_SESSION['error'] = "Unauthorized access";
             header("Location: index.php?action=projects");
             exit();
         }
+        
+        $project_id = $_POST['project_id'];
+        
+        $data = [
+            'project_code' => $_POST['project_code'],
+            'project_name' => $_POST['project_name'],
+            'project_description' => $_POST['project_description'] ?? null,
+            'functional_division' => $_POST['functional_division'],
+            'year' => $_POST['year'] ?? '', // ADD THIS LINE - include the year field
+            'project_lead' => $_POST['project_lead'] ?? null,
+            'lead_designation' => $_POST['lead_designation'] ?? null,
+            'start_date' => $_POST['start_date'] ?? null,
+            'target_end_date' => $_POST['target_end_date'] ?? null,
+            'budget_allocation' => $_POST['budget_allocation'] ?? 0,
+            'priority' => $_POST['priority'] ?? 'medium',
+            'status' => $_POST['status'] ?? 'planning'
+        ];
+        
+        $unit_ids = $_POST['unit_ids'] ?? [];
+        
+        $result = $this->project->updateProject($project_id, $data, $unit_ids);
+        
+        if($result['success']) {
+            $_SESSION['success'] = $result['message'];
+        } else {
+            $_SESSION['error'] = $result['message'];
+        }
+        
+        header("Location: index.php?action=projects");
+        exit();
     }
-
+}
     // Delete project
     public function delete() {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {

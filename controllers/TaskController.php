@@ -36,7 +36,8 @@ class TaskController {
         'search' => $_GET['search'] ?? '',
         'division' => $_GET['division'] ?? '',
         'priority' => $_GET['priority'] ?? '',
-        'status' => $_GET['status'] ?? ''
+        'status' => $_GET['status'] ?? '',
+        'year' => $_GET['year'] ?? '' // Add year filter
     ];
     
     // Add role-based filter
@@ -61,7 +62,7 @@ class TaskController {
     // Get all units for the create modal (for multiple selection)
     $units = $this->unit->getAllUnits();
     
-    // ADD THIS - Define canUpdate variable for the view
+    // Define canUpdate variable for the view
     $canUpdate = ($user['role'] == 'admin');
     
     require_once __DIR__ . '/../views/tasks/index.php';
@@ -94,6 +95,12 @@ class TaskController {
             exit();
         }
         
+        if(empty($_POST['year'])) {
+            $_SESSION['error'] = "Year is required";
+            header("Location: index.php?action=tasks");
+            exit();
+        }
+        
         // Check for unit_ids - could be array or single value
         $unit_ids = [];
         if(isset($_POST['unit_ids']) && is_array($_POST['unit_ids'])) {
@@ -115,14 +122,15 @@ class TaskController {
             exit();
         }
         
-        // Prepare data - use 'functional_division' from form
+        // Prepare data
         $data = [
             'task_details' => $_POST['task_details'],
-            'functional_division' => $_POST['functional_division'], // Use functional_division directly
+            'functional_division' => $_POST['functional_division'],
             'project_id' => !empty($_POST['project_id']) ? $_POST['project_id'] : null,
             'target_completion_date' => $_POST['target_completion_date'],
             'priority' => $_POST['priority'] ?? 'medium',
             'budget_allocation' => $_POST['budget_allocation'] ?? 0,
+            'year' => $_POST['year'],
             'created_by' => $_SESSION['user_id']
         ];
         
@@ -452,6 +460,7 @@ private function getStatusFromPercentage($percentage) {
 
 
 
+
 // Show create task page
 public function createPage() {
     $user = $this->auth->getCurrentUser();
@@ -470,9 +479,6 @@ public function createPage() {
     require_once __DIR__ . '/../models/Project.php';
     $projectModel = new Project();
     $projects = $projectModel->getProjectsForDropdown();
-    
-    // Debug - remove after confirming it works
-    error_log("Projects fetched for dropdown: " . print_r($projects, true));
     
     require_once __DIR__ . '/../views/tasks/create.php';
 }
@@ -564,6 +570,12 @@ public function updateTask() {
             exit();
         }
         
+        if(empty($_POST['year'])) {
+            $_SESSION['error'] = "Year is required";
+            header("Location: index.php?action=edit_task_page&id=" . $task_id);
+            exit();
+        }
+        
         // Get unit IDs
         $unit_ids = $_POST['unit_ids'] ?? [];
         
@@ -586,7 +598,8 @@ public function updateTask() {
             'project_id' => !empty($_POST['project_id']) ? $_POST['project_id'] : null,
             'target_completion_date' => $_POST['target_completion_date'],
             'priority' => $_POST['priority'] ?? 'medium',
-            'budget_allocation' => $_POST['budget_allocation'] ?? 0
+            'budget_allocation' => $_POST['budget_allocation'] ?? 0,
+            'year' => $_POST['year']
         ];
         
         // Update task with units

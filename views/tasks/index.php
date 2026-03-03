@@ -72,7 +72,7 @@
         <form method="GET" action="index.php" class="row g-3">
             <input type="hidden" name="action" value="tasks">
             
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="search" class="form-label">Search</label>
                 <input type="text" class="form-control" id="search" name="search" 
                        placeholder="Search commitment or units..." 
@@ -87,9 +87,17 @@
                     <option value="OSDS" <?php echo (isset($_GET['division']) && $_GET['division'] == 'OSDS') ? 'selected' : ''; ?>>OSDS</option>
                     <option value="CID" <?php echo (isset($_GET['division']) && $_GET['division'] == 'CID') ? 'selected' : ''; ?>>CID</option>
                     <option value="SGOD" <?php echo (isset($_GET['division']) && $_GET['division'] == 'SGOD') ? 'selected' : ''; ?>>SGOD</option>
+                    <option value="Schools" <?php echo (isset($_GET['division']) && $_GET['division'] == 'Schools') ? 'selected' : ''; ?>>Schools</option>
                 </select>
             </div>
             <?php endif; ?>
+            
+            <div class="col-md-2">
+                <label for="year" class="form-label">Year</label>
+                <input type="text" class="form-control" id="year" name="year" 
+                       placeholder="e.g., 2024, 2025" 
+                       value="<?php echo htmlspecialchars($_GET['year'] ?? ''); ?>">
+            </div>
             
             <div class="col-md-2">
                 <label for="priority" class="form-label">Priority</label>
@@ -112,8 +120,8 @@
                 </select>
             </div>
             
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Apply</button>
                 <a href="index.php?action=tasks" class="btn btn-secondary">Reset</a>
             </div>
         </form>
@@ -135,37 +143,35 @@
         ?>
         
         <!-- Pagination -->
-        <?php if($total_pages > 1): ?>
-        <nav aria-label="Task pagination" class="mt-4">
-            <ul class="pagination justify-content-center">
-                <?php if($page > 1): ?>
-                <li class="page-item">
-                    <a class="page-link" href="?action=tasks&page=<?php echo ($page-1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>&status=<?php echo urlencode($_GET['status'] ?? ''); ?>">
-                        Previous
-                    </a>
-                </li>
-                <?php endif; ?>
-                
-                <?php for($i = 1; $i <= $total_pages; $i++): ?>
-                <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                    <a class="page-link" href="?action=tasks&page=<?php echo $i; ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>&status=<?php echo urlencode($_GET['status'] ?? ''); ?>">
-                        <?php echo $i; ?>
-                    </a>
-                </li>
-                <?php endfor; ?>
-                
-                <?php if($page < $total_pages): ?>
-                <li class="page-item">
-                    <a class="page-link" href="?action=tasks&page=<?php echo ($page+1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>&status=<?php echo urlencode($_GET['status'] ?? ''); ?>">
-                        Next
-                    </a>
-                </li>
-                <?php endif; ?>
-            </ul>
-        </nav>
+<?php if($total_pages > 1): ?>
+<nav aria-label="Task pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <?php if($page > 1): ?>
+        <li class="page-item">
+            <a class="page-link" href="?action=tasks&page=<?php echo ($page-1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&year=<?php echo urlencode($_GET['year'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>&status=<?php echo urlencode($_GET['status'] ?? ''); ?>">
+                Previous
+            </a>
+        </li>
         <?php endif; ?>
-    </div>
-</div>
+        
+        <?php for($i = 1; $i <= $total_pages; $i++): ?>
+        <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+            <a class="page-link" href="?action=tasks&page=<?php echo $i; ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&year=<?php echo urlencode($_GET['year'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>&status=<?php echo urlencode($_GET['status'] ?? ''); ?>">
+                <?php echo $i; ?>
+            </a>
+        </li>
+        <?php endfor; ?>
+        
+        <?php if($page < $total_pages): ?>
+        <li class="page-item">
+            <a class="page-link" href="?action=tasks&page=<?php echo ($page+1); ?>&search=<?php echo urlencode($_GET['search'] ?? ''); ?>&division=<?php echo urlencode($_GET['division'] ?? ''); ?>&year=<?php echo urlencode($_GET['year'] ?? ''); ?>&priority=<?php echo urlencode($_GET['priority'] ?? ''); ?>&status=<?php echo urlencode($_GET['status'] ?? ''); ?>">
+                Next
+            </a>
+        </li>
+        <?php endif; ?>
+    </ul>
+</nav>
+<?php endif; ?>
 
 
 
