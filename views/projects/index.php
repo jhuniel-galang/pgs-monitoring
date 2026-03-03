@@ -7,7 +7,7 @@
     <?php if($_SESSION['role'] == 'admin'): ?>
     <div class="col-md-4 text-end">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
-            <i class="bi bi-plus-circle"></i> Create New Project
+            <i class="bi bi-plus-circle"></i> Create New Core Area
         </button>
     </div>
     <?php endif; ?>
@@ -55,7 +55,7 @@
             <div class="card text-white bg-<?php echo $bgColor; ?>">
                 <div class="card-header"><?php echo $division; ?> Division</div>
                 <div class="card-body">
-                    <h5 class="card-title">Total Projects: <?php echo $summary['total_projects']; ?></h5>
+                    <h5 class="card-title">Total Core Area: <?php echo $summary['total_projects']; ?></h5>
                     <p class="card-text">
                         Ongoing: <?php echo $summary['ongoing_projects']; ?> | 
                         Completed: <?php echo $summary['completed_projects']; ?> | 
@@ -156,7 +156,7 @@
 <!-- Projects Table -->
 <div class="card">
     <div class="card-header">
-        <h5>Project List (<?php echo $total_projects; ?> projects found)</h5>
+        <h5>Core Area (<?php echo $total_projects; ?> projects found)</h5>
         <?php if($_SESSION['role'] == 'encoder'): ?>
         <small class="text-muted d-block">Showing only projects from <?php echo $_SESSION['functional_division']; ?> division</small>
         <?php endif; ?>

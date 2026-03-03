@@ -1,15 +1,15 @@
 <?php if(empty($filtered_tasks)): ?>
-    <p class="text-muted">No tasks found.</p>
+    <p class="text-muted">No commitments found.</p>
 <?php else: ?>
 <div class="table-responsive">
-    <table class="table table-hover">
+    
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th>Task</th>
+                <th>Commitments</th>
                 <th>Division</th>
                 <th>Unit</th>
                 <th>Target Date</th>
-                <th>Budget</th>
                 <th>Priority</th>
                 <th>Progress</th>
                 <th>Last Update</th>
@@ -22,16 +22,27 @@
                 $taskId = $task['task_id'] ?? $task['id'] ?? 0;
                 if(!$taskId) continue; // Skip if no ID
                 
-                // Determine if user can update this task
-                $canUpdate = false;
+                // Double-check encoder access (extra safety)
+                if($_SESSION['role'] == 'encoder' && isset($task['functional_division']) && $task['functional_division'] != $_SESSION['functional_division']) {
+                    continue; // Skip tasks not in encoder's division
+                }
+                
+                // Determine permissions
+                $canUpdate = false; // For progress updates
+                $canEdit = false;    // For editing task details
+                $canDelete = false;   // For deleting tasks
+                
                 if($_SESSION['role'] == 'admin') {
                     $canUpdate = true;
+                    $canEdit = true;
+                    $canDelete = true;
                 } elseif($_SESSION['role'] == 'encoder' && isset($task['functional_division']) && $task['functional_division'] == $_SESSION['functional_division']) {
-                    $canUpdate = true;
+                    $canUpdate = true; // Encoders can update progress
+                    // Encoders cannot edit details or delete
                 }
             ?>
             <tr>
-                <td><?php echo htmlspecialchars(substr($task['task_details'] ?? '', 0, 50)) . '...'; ?></td>
+                <td><?php echo htmlspecialchars($task['task_details'] ?? ''); ?></td>
                 <td>
                     <?php if(isset($task['functional_division'])): ?>
                     <span class="badge bg-<?php 
@@ -47,18 +58,15 @@
                     <?php 
                     if(isset($task['unit_names']) && $task['unit_names']) {
                         $units = explode(', ', $task['unit_names']);
-                        foreach($units as $unit) {
-                            echo '<span class="badge bg-info me-1">' . htmlspecialchars($unit) . '</span>';
-                        }
+                        echo htmlspecialchars(implode(', ', $units));
                     } elseif(isset($task['unit_name']) && $task['unit_name']) {
-                        echo '<span class="badge bg-info">' . htmlspecialchars($task['unit_name']) . '</span>';
+                        echo htmlspecialchars($task['unit_name']);
                     } else {
                         echo 'N/A';
                     }
                     ?>
                 </td>
                 <td><?php echo htmlspecialchars($task['target_completion_date'] ?? 'N/A'); ?></td>
-                <td>₱ <?php echo number_format($task['budget_allocation'] ?? 0, 2); ?></td>
                 <td>
                     <span class="badge bg-<?php 
                         echo ($task['priority'] ?? '') == 'critical' ? 'danger' : 
@@ -68,7 +76,7 @@
                         <?php echo ucfirst($task['priority'] ?? 'N/A'); ?>
                     </span>
                 </td>
-                <td style="min-width: 150px;">
+                <td style="min-width: 120px;">
                     <div class="progress" style="height: 20px;">
                         <?php $percentage = $task['current_percentage'] ?? 0; ?>
                         <div class="progress-bar bg-<?php 
@@ -78,6 +86,9 @@
                             <?php echo $percentage; ?>%
                         </div>
                     </div>
+                    <small class="text-muted">
+                        <?php echo $percentage; ?>%
+                    </small>
                 </td>
                 <td>
                     <?php 
@@ -95,9 +106,18 @@
                         
                         <?php if($canUpdate): ?>
                         <a href="index.php?action=update_task_page&id=<?php echo $taskId; ?>" 
-                           class="btn btn-sm btn-success">
-                            Update
-                        </a>
+                           class="btn btn-sm btn-success">Update</a>
+                        <?php endif; ?>
+                        
+                        <?php if($canEdit): ?>
+                        <a href="index.php?action=edit_task_page&id=<?php echo $taskId; ?>" 
+                           class="btn btn-sm btn-warning">Edit</a>
+                        <?php endif; ?>
+                        
+                        <?php if($canDelete): ?>
+                        <a href="index.php?action=delete_task_direct&id=<?php echo $taskId; ?>" 
+                           class="btn btn-sm btn-danger" 
+                           onclick="return confirm('Delete this task?');">Delete</a>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -107,8 +127,28 @@
     </table>
 </div>
 
-<!-- Single Update Modal (instead of multiple modals) -->
+<style>
+/* Simple styles matching projects page */
+.table td {
+    vertical-align: middle;
+}
+
+/* Make the task column wrap properly */
+.table td:first-child {
+    word-break: break-word;
+    white-space: normal;
+    min-width: 250px;
+}
+
+/* Button group spacing */
+.btn-group {
+    gap: 2px;
+}
+</style>
+
+<!-- Single Update Modal (keep this for update functionality) -->
 <div class="modal fade" id="updateTaskModal" tabindex="-1" aria-labelledby="updateTaskModalLabel" aria-hidden="true">
+    <!-- Your existing update modal content -->
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
@@ -225,14 +265,12 @@
 </div>
 
 <script>
-// Global variable to store current task data
+// Keep your existing JavaScript for the update modal
 let currentTaskData = null;
 
-// Function to open update modal with task data
 function openUpdateModal(taskId) {
     console.log('Opening update modal for task:', taskId);
     
-    // Fetch task data via AJAX
     fetch(`index.php?action=get_task&id=${taskId}`)
         .then(response => {
             if (!response.ok) {
@@ -244,11 +282,9 @@ function openUpdateModal(taskId) {
             console.log('Task data received:', task);
             currentTaskData = task;
             
-            // Set form values
             document.getElementById('modal_task_id').value = task.id || task.task_id;
             document.getElementById('modal_task_details').textContent = task.task_details || 'No details';
             
-            // Set division badge
             let division = task.functional_division || 'N/A';
             let badge = document.getElementById('modal_task_division');
             badge.textContent = division;
@@ -257,20 +293,16 @@ function openUpdateModal(taskId) {
             document.getElementById('modal_task_unit').textContent = task.unit_name || 'N/A';
             document.getElementById('modal_task_target_date').textContent = task.target_completion_date || 'N/A';
             
-            // Set progress
             let currentPercent = parseInt(task.current_percentage) || 0;
             document.getElementById('modal_current_progress').style.width = currentPercent + '%';
             document.getElementById('modal_current_progress').textContent = currentPercent + '%';
             
-            // Set slider and input
             document.getElementById('modal_percentage').value = currentPercent;
             document.getElementById('modal_percent_input').value = currentPercent;
             document.getElementById('modal_preview_bar').style.width = currentPercent + '%';
             
-            // Clear remarks
             document.getElementById('modal_remarks').value = '';
             
-            // Show the modal
             let updateModal = new bootstrap.Modal(document.getElementById('updateTaskModal'));
             updateModal.show();
         })
@@ -280,7 +312,6 @@ function openUpdateModal(taskId) {
         });
 }
 
-// Modal helper functions
 function updateModalPercentValue(value) {
     document.getElementById('modal_percent_input').value = value;
     document.getElementById('modal_preview_bar').style.width = value + '%';
@@ -307,7 +338,6 @@ function setModalDeferred() {
     }
 }
 
-// Form submission handler
 document.getElementById('updateTaskForm')?.addEventListener('submit', function(e) {
     let remarks = document.getElementById('modal_remarks').value.trim();
     if (!remarks) {
@@ -324,7 +354,6 @@ document.getElementById('updateTaskForm')?.addEventListener('submit', function(e
     });
 });
 
-// Debug: Check if the script loaded
 console.log('Tasks table script loaded');
 </script>
 

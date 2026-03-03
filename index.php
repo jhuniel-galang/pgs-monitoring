@@ -39,42 +39,72 @@ switch($action) {
         $taskController->dashboard();
         break;
     
-    // Task routes
-    case 'tasks':
+    // Task routes - CLEANED UP VERSION
+case 'tasks':
     require_once 'controllers/TaskController.php';
     $taskController = new TaskController();
     $taskController->index();
     break;
-    
+
 case 'create_task':
     require_once 'controllers/TaskController.php';
     $taskController = new TaskController();
     $taskController->create();
     break;
-    
+
+case 'create_task_page':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->createPage();
+    break;
+
 case 'update_status':
     require_once 'controllers/TaskController.php';
     $taskController = new TaskController();
     $taskController->updateStatus();
     break;
-    
+
 case 'update_task_page':
     require_once 'controllers/TaskController.php';
     $taskController = new TaskController();
-    $taskController->updatePage($_GET['id']);
+    $taskController->updatePage($_GET['id'] ?? 0);
     break;
-    
+
 case 'view_task':
     require_once 'controllers/TaskController.php';
     $taskController = new TaskController();
-    $taskController->view($_GET['id']);
+    $taskController->view($_GET['id'] ?? 0);
     break;
 
-// ADD THIS NEW CASE for AJAX task fetching
 case 'get_task':
     require_once 'controllers/TaskController.php';
     $taskController = new TaskController();
     $taskController->getTaskJson();
+    break;
+
+case 'edit_task_page':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->editPage($_GET['id'] ?? 0);
+    break;
+
+case 'update_task':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->updateTask();
+    break;
+
+case 'delete_task':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->delete();
+    break;
+
+// Optional: Add this for testing direct delete
+case 'delete_task_direct':
+    require_once 'controllers/TaskController.php';
+    $taskController = new TaskController();
+    $taskController->deleteDirect($_GET['id'] ?? 0);
     break;
     
     // User routes
@@ -227,19 +257,12 @@ case 'remove_project_unit':
     $projectController->removeProjectUnit();
     break;
 
-case 'create_task_page':
+case 'delete_task_direct':
     require_once 'controllers/TaskController.php';
-    $controller = new TaskController();
-    $controller->createPage();
+    $taskController = new TaskController();
+    $taskController->deleteDirect($_GET['id'] ?? 0);
     break;
 
-case 'update_task_page':
-    require_once 'controllers/TaskController.php';
-    $controller = new TaskController();
-    $controller->updatePage($_GET['id'] ?? 0);
-    break;
-        
-    default:
         // 404 page
         header("HTTP/1.0 404 Not Found");
         echo "<h1>Page Not Found</h1>";

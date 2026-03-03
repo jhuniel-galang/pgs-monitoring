@@ -1,21 +1,5 @@
 <?php require_once 'views/layout/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h3>PGS Monitoring Dashboard</h3>
-        <p class="text-muted">
-            Welcome back, <?php echo htmlspecialchars($user['full_name'] ?? $user['username']); ?>!
-            <?php if($_SESSION['role'] == 'encoder'): ?>
-                <span class="badge bg-info">Encoder - <?php echo $_SESSION['functional_division']; ?></span>
-            <?php else: ?>
-                <span class="badge bg-primary">Administrator</span>
-            <?php endif; ?>
-        </p>
-    </div>
-</div>
-
-
-
 <!-- Projects Carousel -->
 <?php if(isset($projects) && !empty($projects)): ?>
 <div class="row mb-4">
@@ -24,7 +8,7 @@
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> Core Area & Commitments Overview</h5>
                 <div>
-                    <span class="badge bg-light text-dark me-2" id="carousel-status">Core Area Overview</span>
+                    <span class="badge bg-light text-dark me-2" id="carousel-status">Core Area Overview 1/<?php echo ceil(count($projects)/8) + count($projects); ?></span>
                     <button class="btn btn-sm btn-light" onclick="prevSlide()">
                         <i class="bi bi-chevron-left"></i>
                     </button>
@@ -35,12 +19,17 @@
             </div>
             <div class="card-body">
                 <div id="projectCarousel" class="project-carousel">
-                    <!-- Slide 1: All Projects Overview (4 per row) -->
-                    <div class="carousel-slide active" data-slide="0" data-type="overview">
+                    <!-- Project Overview Slides (8 projects per slide) -->
+                    <?php 
+                    $projectChunks = array_chunk($projects, 8);
+                    $slideIndex = 0;
+                    foreach($projectChunks as $chunkIndex => $projectChunk): 
+                    ?>
+                    <div class="carousel-slide <?php echo $chunkIndex === 0 ? 'active' : ''; ?>" data-slide="<?php echo $chunkIndex; ?>" data-type="overview">
                         <div class="row">
                             <?php 
                             $projectCount = 0;
-                            foreach($projects as $project): 
+                            foreach($projectChunk as $project): 
                                 if($projectCount % 4 == 0 && $projectCount > 0) {
                                     echo '</div><div class="row mt-3">';
                                 }
@@ -90,7 +79,14 @@
                             endforeach; 
                             ?>
                         </div>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">Overview Page <?php echo $chunkIndex + 1; ?>/<?php echo count($projectChunks); ?></small>
+                        </div>
                     </div>
+                    <?php 
+                        $slideIndex++;
+                    endforeach; 
+                    ?>
 
                     <!-- Individual Project Task Slides -->
                     <?php foreach($projects as $project): ?>
@@ -99,7 +95,7 @@
                             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">
                                     <i class="bi bi-list-task"></i> 
-                                    <?php echo htmlspecialchars($project['project_name']); ?> - Commitment
+                                    <?php echo htmlspecialchars($project['project_name']); ?> - Commitments
                                 </h5>
                                 <button class="btn btn-sm btn-light" onclick="goToSlide(0)">
                                     <i class="bi bi-arrow-left"></i> Back to Overview
@@ -115,7 +111,7 @@
                                 
                                 <?php if(empty($project_tasks)): ?>
                                 <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> No tasks found for this project.
+                                    <i class="bi bi-info-circle"></i> No commitments found for this project.
                                     <?php if($_SESSION['role'] == 'admin'): ?>
                                     <a href="index.php?action=create_task_page&project_id=<?php echo $project['project_id']; ?>" class="alert-link">
                                         Create a Commitment
@@ -128,7 +124,6 @@
                                     <?php foreach($project_tasks as $task): 
                                         $percentage = $task['current_percentage'] ?? 0;
                                         $statusColor = $percentage >= 100 ? 'success' : ($percentage > 0 ? 'warning' : 'secondary');
-                                        $statusText = $percentage >= 100 ? 'Completed' : ($percentage > 0 ? 'In Progress' : 'Not Started');
                                     ?>
                                     <div class="col-md-3 mb-3">
                                         <div class="card h-100 border-<?php echo $statusColor; ?>">
@@ -215,10 +210,18 @@
                 
                 <!-- Carousel Indicators -->
                 <div class="carousel-indicators mt-3">
-                    <button type="button" class="indicator active" onclick="goToSlide(0)">Projects Overview</button>
+                    <?php 
+                    $totalOverviewSlides = count($projectChunks);
+                    for($i = 0; $i < $totalOverviewSlides; $i++): 
+                    ?>
+                    <button type="button" class="indicator <?php echo $i === 0 ? 'active' : ''; ?>" onclick="goToSlide(<?php echo $i; ?>)">
+                        Overview <?php echo $i + 1; ?>
+                    </button>
+                    <?php endfor; ?>
+                    
                     <?php foreach($projects as $index => $project): ?>
                     <button type="button" class="indicator" onclick="goToSlide('project_<?php echo $project['project_id']; ?>')">
-                        <?php echo htmlspecialchars(substr($project['project_name'], 0, 15)); ?>
+                        <?php echo htmlspecialchars(substr($project['project_name'], 0, 10)); ?>
                     </button>
                     <?php endforeach; ?>
                 </div>
@@ -239,9 +242,6 @@
 </div>
 <?php endif; ?>
 
-
-
-
 <!-- Division Summary Cards (Quick overview) -->
 <div class="row mb-4">
     <?php foreach($division_summary as $summary): ?>
@@ -261,9 +261,6 @@
     <?php endif; ?>
     <?php endforeach; ?>
 </div>
-
-
-
 
 <!-- Recent Tasks -->
 <div class="row">
@@ -333,17 +330,25 @@
 <style>
 .project-carousel {
     position: relative;
-    min-height: 400px;
+    min-height: 500px;
 }
 
 .carousel-slide {
     display: none;
     opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.8s ease-in-out;
 }
 
 .carousel-slide.active {
     display: block;
+    opacity: 1;
+}
+
+.carousel-slide.fade-out {
+    opacity: 0;
+}
+
+.carousel-slide.fade-in {
     opacity: 1;
 }
 
@@ -423,31 +428,67 @@
 <script>
 let currentSlide = '0';
 let autoPlayInterval;
-let slideOrder = ['0'];
+let slideOrder = [];
+let isTransitioning = false;
 
-// Initialize slide order
+// Initialize slide order - first all overview slides, then all project task slides
 <?php 
-echo "slideOrder.push('" . implode("', '", array_map(function($p) { 
-    return 'project_' . $p['project_id']; 
-}, $projects)) . "');";
+$totalOverviewSlides = count($projectChunks);
+// Add overview slides
+for($i = 0; $i < $totalOverviewSlides; $i++) {
+    echo "slideOrder.push('$i');\n";
+}
+// Add project task slides
+foreach($projects as $p) {
+    echo "slideOrder.push('project_" . $p['project_id'] . "');\n";
+}
 ?>
 
 function showSlide(slideId) {
-    // Hide all slides
-    document.querySelectorAll('.carousel-slide').forEach(slide => {
-        slide.classList.remove('active');
-    });
+    if (isTransitioning) return; // Prevent multiple transitions at once
+    isTransitioning = true;
     
-    // Show selected slide
+    const currentActiveSlide = document.querySelector('.carousel-slide.active');
     const targetSlide = document.querySelector(`.carousel-slide[data-slide="${slideId}"]`);
-    if (targetSlide) {
-        targetSlide.classList.add('active');
+    
+    if (!targetSlide) {
+        isTransitioning = false;
+        return;
+    }
+    
+    // Fade out current slide if exists
+    if (currentActiveSlide) {
+        currentActiveSlide.classList.remove('active');
+        currentActiveSlide.classList.add('fade-out');
+        
+        // After fade out, hide it completely and fade in new slide
+        setTimeout(() => {
+            currentActiveSlide.classList.remove('fade-out');
+            currentActiveSlide.style.display = 'none';
+            
+            // Show and fade in new slide
+            targetSlide.style.display = 'block';
+            targetSlide.classList.add('active', 'fade-in');
+            
+            setTimeout(() => {
+                targetSlide.classList.remove('fade-in');
+                isTransitioning = false;
+            }, 800); // Match transition duration
+        }, 400); // Half of the transition time
+    } else {
+        // No current slide, just show new one
+        targetSlide.style.display = 'block';
+        targetSlide.classList.add('active', 'fade-in');
+        
+        setTimeout(() => {
+            targetSlide.classList.remove('fade-in');
+            isTransitioning = false;
+        }, 800);
     }
     
     // Update indicators
     document.querySelectorAll('.indicator').forEach((indicator, i) => {
-        const indicatorSlideId = i === 0 ? '0' : slideOrder[i];
-        if (indicatorSlideId == slideId) {
+        if (indicator.getAttribute('onclick').includes(slideId)) {
             indicator.classList.add('active');
         } else {
             indicator.classList.remove('active');
@@ -456,17 +497,25 @@ function showSlide(slideId) {
     
     // Update status text
     const statusEl = document.getElementById('carousel-status');
+    const currentIndex = slideOrder.indexOf(slideId) + 1;
+    const totalSlides = slideOrder.length;
+    
     if (slideId === '0') {
-        statusEl.textContent = 'Projects Overview';
+        statusEl.textContent = `Core Area Overview 1/${totalSlides}`;
+    } else if (!isNaN(parseInt(slideId))) {
+        statusEl.textContent = `Core Area Overview ${parseInt(slideId) + 1}/${totalSlides}`;
     } else {
-        const projectName = document.querySelector(`.carousel-slide[data-slide="${slideId}"] .card-header h5`).textContent;
-        statusEl.textContent = projectName;
+        const projectHeader = document.querySelector(`.carousel-slide[data-slide="${slideId}"] .card-header h5`);
+        if (projectHeader) {
+            statusEl.textContent = `${projectHeader.textContent} ${currentIndex}/${totalSlides}`;
+        }
     }
     
     currentSlide = slideId;
 }
 
 function nextSlide() {
+    if (isTransitioning) return; // Don't allow next slide during transition
     const currentIndex = slideOrder.indexOf(currentSlide);
     let nextIndex = (currentIndex + 1) % slideOrder.length;
     showSlide(slideOrder[nextIndex]);
@@ -474,6 +523,7 @@ function nextSlide() {
 }
 
 function prevSlide() {
+    if (isTransitioning) return; // Don't allow previous slide during transition
     const currentIndex = slideOrder.indexOf(currentSlide);
     let prevIndex = (currentIndex - 1 + slideOrder.length) % slideOrder.length;
     showSlide(slideOrder[prevIndex]);
@@ -481,6 +531,7 @@ function prevSlide() {
 }
 
 function goToSlide(slideId) {
+    if (isTransitioning) return; // Don't allow navigation during transition
     showSlide(slideId);
     resetAutoPlay();
 }
@@ -491,9 +542,14 @@ function showProjectTasks(projectId) {
 
 function startAutoPlay() {
     if (slideOrder.length <= 1) return;
+    if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+    }
     autoPlayInterval = setInterval(() => {
-        nextSlide();
-    }, 20000); 
+        if (!isTransitioning) { // Only auto-advance if not transitioning
+            nextSlide();
+        }
+    }, 10000); // 10 seconds
 }
 
 function resetAutoPlay() {
@@ -503,8 +559,20 @@ function resetAutoPlay() {
     startAutoPlay();
 }
 
-// Start autoplay when page loads
+// Initialize slides - make sure only the first slide is visible
 document.addEventListener('DOMContentLoaded', function() {
+    // Hide all slides first
+    document.querySelectorAll('.carousel-slide').forEach(slide => {
+        slide.style.display = 'none';
+    });
+    
+    // Show the first slide
+    const firstSlide = document.querySelector('.carousel-slide[data-slide="0"]');
+    if (firstSlide) {
+        firstSlide.style.display = 'block';
+        firstSlide.classList.add('active');
+    }
+    
     startAutoPlay();
     
     // Pause autoplay when user hovers over carousel
@@ -520,6 +588,13 @@ document.addEventListener('DOMContentLoaded', function() {
             startAutoPlay();
         });
     }
+    
+    // Also pause when clicking indicators
+    document.querySelectorAll('.indicator').forEach(indicator => {
+        indicator.addEventListener('click', () => {
+            resetAutoPlay();
+        });
+    });
 });
 </script>
 

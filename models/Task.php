@@ -454,6 +454,34 @@ public function getAllUnits() {
 }
 
 
+public function deleteTask($task_id) {
+    $this->getConnection()->beginTransaction();
+    
+    try {
+        // Delete task units first
+        $query = "DELETE FROM tbl_task_units WHERE task_id = :task_id";
+        $stmt = $this->getConnection()->prepare($query);
+        $stmt->execute([':task_id' => $task_id]);
+        
+        // Delete status history
+        $query = "DELETE FROM tbl_status WHERE task_id = :task_id";
+        $stmt = $this->getConnection()->prepare($query);
+        $stmt->execute([':task_id' => $task_id]);
+        
+        // Delete the task
+        $query = "DELETE FROM " . $this->table . " WHERE task_id = :task_id";
+        $stmt = $this->getConnection()->prepare($query);
+        $stmt->execute([':task_id' => $task_id]);
+        
+        $this->getConnection()->commit();
+        return ['success' => true, 'message' => 'Task deleted successfully'];
+        
+    } catch (Exception $e) {
+        $this->getConnection()->rollBack();
+        return ['success' => false, 'message' => 'Failed to delete task: ' . $e->getMessage()];
+    }
+}
+
 
 }
 ?>

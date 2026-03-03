@@ -478,6 +478,156 @@ public function createPage() {
 }
 
 
+public function delete() {
+    if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $user = $this->auth->getCurrentUser();
+        
+        // Only admin can delete
+        if($user['role'] != 'admin') {
+            $_SESSION['error'] = "Unauthorized access";
+            header("Location: index.php?action=tasks");
+            exit();
+        }
+        
+        $task_id = $_POST['task_id'];
+        
+        $result = $this->task->deleteTask($task_id);
+        
+        if($result['success']) {
+            $_SESSION['success'] = $result['message'];
+        } else {
+            $_SESSION['error'] = $result['message'];
+        }
+        
+        header("Location: index.php?action=tasks");
+        exit();
+    }
+}
+
+
+// Show edit task page
+public function editPage($task_id) {
+    $user = $this->auth->getCurrentUser();
+    
+    // Only admin can edit task details
+    if($user['role'] != 'admin') {
+        $_SESSION['error'] = "Unauthorized access";
+        header("Location: index.php?action=tasks");
+        exit();
+    }
+    
+    // Get task details
+    $task = $this->task->getTaskWithUnits($task_id);
+    
+    if(!$task) {
+        $_SESSION['error'] = "Task not found";
+        header("Location: index.php?action=tasks");
+        exit();
+    }
+    
+    // Get all units for the form
+    $units = $this->unit->getAllUnits();
+    
+    // Get all projects for the dropdown
+    require_once __DIR__ . '/../models/Project.php';
+    $projectModel = new Project();
+    $projects = $projectModel->getProjectsForDropdown();
+    
+    require_once __DIR__ . '/../views/tasks/edit.php';
+}
+
+
+// Update task details (not progress)
+public function updateTask() {
+    if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $user = $this->auth->getCurrentUser();
+        
+        // Only admin can update task details
+        if($user['role'] != 'admin') {
+            $_SESSION['error'] = "Unauthorized access";
+            header("Location: index.php?action=tasks");
+            exit();
+        }
+        
+        $task_id = $_POST['task_id'];
+        
+        // Validate input
+        if(empty($_POST['task_details'])) {
+            $_SESSION['error'] = "Task details is required";
+            header("Location: index.php?action=edit_task_page&id=" . $task_id);
+            exit();
+        }
+        
+        if(empty($_POST['functional_division'])) {
+            $_SESSION['error'] = "Division is required";
+            header("Location: index.php?action=edit_task_page&id=" . $task_id);
+            exit();
+        }
+        
+        // Get unit IDs
+        $unit_ids = $_POST['unit_ids'] ?? [];
+        
+        if(empty($unit_ids)) {
+            $_SESSION['error'] = "At least one unit must be selected";
+            header("Location: index.php?action=edit_task_page&id=" . $task_id);
+            exit();
+        }
+        
+        if(empty($_POST['target_completion_date'])) {
+            $_SESSION['error'] = "Target completion date is required";
+            header("Location: index.php?action=edit_task_page&id=" . $task_id);
+            exit();
+        }
+        
+        // Prepare data
+        $data = [
+            'task_details' => $_POST['task_details'],
+            'functional_division' => $_POST['functional_division'],
+            'project_id' => !empty($_POST['project_id']) ? $_POST['project_id'] : null,
+            'target_completion_date' => $_POST['target_completion_date'],
+            'priority' => $_POST['priority'] ?? 'medium',
+            'budget_allocation' => $_POST['budget_allocation'] ?? 0
+        ];
+        
+        // Update task with units
+        $result = $this->task->updateTaskWithUnits($task_id, $data, $unit_ids);
+        
+        if($result['success']) {
+            $_SESSION['success'] = "Task updated successfully";
+            header("Location: index.php?action=view_task&id=" . $task_id);
+        } else {
+            $_SESSION['error'] = $result['message'];
+            header("Location: index.php?action=edit_task_page&id=" . $task_id);
+        }
+        exit();
+    }
+}
+
+
+public function deleteDirect($task_id) {
+    $user = $this->auth->getCurrentUser();
+    
+    // Only admin can delete
+    if($user['role'] != 'admin') {
+        $_SESSION['error'] = "Unauthorized access";
+        header("Location: index.php?action=tasks");
+        exit();
+    }
+    
+    error_log("deleteDirect called for task_id: " . $task_id);
+    
+    $result = $this->task->deleteTask($task_id);
+    
+    if($result['success']) {
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
+    }
+    
+    header("Location: index.php?action=tasks");
+    exit();
+}
+
 
     
 }

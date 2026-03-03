@@ -29,7 +29,7 @@
     <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
 <div class="col-md-4 text-end">
     <a href="index.php?action=create_task_page" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Create New Task
+        <i class="bi bi-plus-circle"></i> Create New Commitment
     </a>
 </div>
 <?php endif; ?>
@@ -75,7 +75,7 @@
             <div class="col-md-4">
                 <label for="search" class="form-label">Search</label>
                 <input type="text" class="form-control" id="search" name="search" 
-                       placeholder="Search tasks or units..." 
+                       placeholder="Search commitment or units..." 
                        value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
             </div>
             
@@ -123,7 +123,7 @@
 <!-- Tasks Table -->
 <div class="card">
     <div class="card-header">
-        <h5>Commitment List (<?php echo $total_tasks; ?> tasks found)</h5>
+        <h5>Commitment List (<?php echo $total_tasks; ?> Commitments found)</h5>
         <?php if($_SESSION['role'] == 'encoder'): ?>
         <small class="text-muted d-block">Showing only tasks from <?php echo $_SESSION['functional_division']; ?> division</small>
         <?php endif; ?>

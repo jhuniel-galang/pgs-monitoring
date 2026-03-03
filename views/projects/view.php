@@ -93,11 +93,7 @@
         <div class="card mb-4">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Project Tasks</h5>
-                <?php if($_SESSION['role'] == 'admin'): ?>
-                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                    <i class="bi bi-plus-circle"></i> Add Task
-                </button>
-                <?php endif; ?>
+
             </div>
             <div class="card-body">
                 <?php
