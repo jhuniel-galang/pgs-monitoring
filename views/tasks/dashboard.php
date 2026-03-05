@@ -1,17 +1,17 @@
 <?php require_once 'views/layout/header.php'; ?>
 
-<!-- Year Filter -->
+<!-- Projects Carousel -->
+<?php if(isset($projects) && !empty($projects)): ?>
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-body">
-                <form method="GET" action="index.php" class="row align-items-end">
-                    <input type="hidden" name="action" value="dashboard">
-                    
-                    <div class="col-md-3">
-                        <label for="year" class="form-label fw-bold">Select Year</label>
-                        <select class="form-select form-select-lg" id="year" name="year" onchange="this.form.submit()">
-                            <option value="">All Years</option>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> Core Area & Commitments Overview</h5>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Year Filter inside header -->
+                    <form method="GET" action="index.php" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="action" value="dashboard">
+                        <select class="form-select form-select-sm bg-light text-dark" id="year" name="year" onchange="this.form.submit()" style="width: auto; min-width: 100px;">
                             <option value="2026" <?php echo (isset($selected_year) && $selected_year == '2026') ? 'selected' : ''; ?>>2026</option>
                             <option value="2027" <?php echo (isset($selected_year) && $selected_year == '2027') ? 'selected' : ''; ?>>2027</option>
                             <?php 
@@ -29,41 +29,25 @@
                             endif; 
                             ?>
                         </select>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                        <noscript>
+                            <button type="submit" class="btn btn-sm btn-light">Apply</button>
+                        </noscript>
                         <?php if(isset($selected_year) && $selected_year != ''): ?>
-                        <a href="index.php?action=dashboard" class="btn btn-secondary">Clear</a>
+                        <a href="index.php?action=dashboard" class="btn btn-sm btn-light" title="Clear filter">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
                         <?php endif; ?>
-                    </div>
+                    </form>
                     
-                    <div class="col-md-6 text-end">
-                        <?php if(isset($selected_year) && $selected_year): ?>
-                        <div class="alert alert-info py-2 mb-0">
-                            <i class="bi bi-calendar-check"></i> 
-                            Showing data for <strong><?php echo htmlspecialchars($selected_year); ?></strong>
-                            <?php if(isset($filtered_project_count) && isset($filtered_task_count)): ?>
-                            (<?php echo $filtered_project_count; ?> core areas, <?php echo $filtered_task_count; ?> commitments)
-                            <?php endif; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Projects Carousel -->
-<?php if(isset($projects) && !empty($projects)): ?>
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> Core Area & Commitments Overview</h5>
-                <div>
-                    <span class="badge bg-light text-dark me-2" id="carousel-status">Core Area Overview 1/<?php echo ceil(count($projects)/8) + count($projects); ?></span>
+                    <!-- Filter status badge - simplified -->
+                    <?php if(isset($selected_year) && $selected_year): ?>
+                    <span class="badge bg-light text-dark">
+                        <i class="bi bi-calendar-check"></i> <?php echo htmlspecialchars($selected_year); ?>
+                    </span>
+                    <?php endif; ?>
+                    
+                    <!-- Carousel controls -->
+                    <span class="badge bg-light text-dark me-2" id="carousel-status">1/<?php echo ceil(count($projects)/8) + count($projects); ?></span>
                     <button class="btn btn-sm btn-light" onclick="prevSlide()">
                         <i class="bi bi-chevron-left"></i>
                     </button>
@@ -100,7 +84,13 @@
                                             ($project['functional_division'] == 'CID' ? 'success' : 
                                             ($project['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
                                     ?> text-white">
-                                        <h6 class="mb-0 text-truncate"><?php echo htmlspecialchars($project['project_name']); ?></h6>
+                                        <h6 class="mb-0 text-truncate" title="<?php echo htmlspecialchars($project['project_name']); ?>">
+                                            <?php 
+                                            // Truncate long project names
+                                            $project_name = htmlspecialchars($project['project_name']);
+                                            echo strlen($project_name) > 30 ? substr($project_name, 0, 27) . '...' : $project_name;
+                                            ?>
+                                        </h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-2">
@@ -128,7 +118,7 @@
                                         </div>
                                         <button class="btn btn-sm btn-outline-primary w-100 view-project-tasks" 
                                                 onclick="showProjectTasks(<?php echo $project['project_id']; ?>)">
-                                            View Commitment
+                                            View
                                         </button>
                                     </div>
                                 </div>
@@ -139,7 +129,7 @@
                             ?>
                         </div>
                         <div class="text-center mt-2">
-                            <small class="text-muted">Overview Page <?php echo $chunkIndex + 1; ?>/<?php echo count($projectChunks); ?></small>
+                            <small class="text-muted">Page <?php echo $chunkIndex + 1; ?>/<?php echo count($projectChunks); ?></small>
                         </div>
                     </div>
                     <?php 
@@ -152,14 +142,16 @@
                     <div class="carousel-slide" data-slide="project_<?php echo $project['project_id']; ?>" data-type="project" data-project-id="<?php echo $project['project_id']; ?>">
                         <div class="card">
                             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">
+                                <h5 class="mb-0 text-truncate" style="max-width: 70%;" title="<?php echo htmlspecialchars($project['project_name']); ?>">
                                     <i class="bi bi-list-task"></i> 
-                                    <?php echo htmlspecialchars($project['project_name']); ?> - Commitments
-                                    <span class="badge bg-light text-dark ms-2">Year: <?php echo htmlspecialchars($project['year'] ?? 'N/A'); ?></span>
+                                    <?php 
+                                    // Truncate long project names
+                                    $project_name = htmlspecialchars($project['project_name']);
+                                    echo strlen($project_name) > 50 ? substr($project_name, 0, 47) . '...' : $project_name;
+                                    ?>
+                                    <span class="badge bg-light text-dark ms-2"><?php echo htmlspecialchars($project['year'] ?? 'N/A'); ?></span>
                                 </h5>
-                                <button class="btn btn-sm btn-light" onclick="goToSlide(0)">
-                                    <i class="bi bi-arrow-left"></i> Back to Overview
-                                </button>
+
                             </div>
                             <div class="card-body">
                                 <?php
@@ -175,13 +167,10 @@
                                 ?>
                                 
                                 <?php if(empty($project_tasks)): ?>
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> No commitments found for this project 
-                                    <?php if($selected_year): ?>in <strong><?php echo $selected_year; ?></strong><?php endif; ?>.
+                                <div class="alert alert-info py-2 mb-3">
+                                    <i class="bi bi-info-circle"></i> No commitments for <?php echo $selected_year ?? 'this year'; ?>.
                                     <?php if($_SESSION['role'] == 'admin'): ?>
-                                    <a href="index.php?action=create_task_page&project_id=<?php echo $project['project_id']; ?>" class="alert-link">
-                                        Create a Commitment
-                                    </a>
+                                    <a href="index.php?action=create_task_page&project_id=<?php echo $project['project_id']; ?>" class="alert-link">Add</a>
                                     <?php endif; ?>
                                 </div>
                                 <?php else: ?>
@@ -193,38 +182,42 @@
                                     ?>
                                     <div class="col-md-3 mb-3">
                                         <div class="card h-100 border-<?php echo $statusColor; ?>">
-                                            <div class="card-header bg-<?php echo $statusColor; ?> text-white d-flex justify-content-between align-items-center">
-                                                <span class="badge bg-light text-dark">Priority: <?php echo ucfirst($task['priority'] ?? 'medium'); ?></span>
-                                                <small>Year: <?php echo htmlspecialchars($task['year'] ?? 'N/A'); ?></small>
+                                            <div class="card-header bg-<?php echo $statusColor; ?> text-white d-flex justify-content-between align-items-center py-1">
+                                                <span class="badge bg-light text-dark"><?php echo ucfirst($task['priority'] ?? 'med'); ?></span>
+                                                <small><?php echo htmlspecialchars($task['year'] ?? 'N/A'); ?></small>
                                             </div>
-                                            <div class="card-body">
-                                                <h6 class="card-title text-truncate" title="<?php echo htmlspecialchars($task['task_details']); ?>">
-                                                    <?php echo htmlspecialchars(substr($task['task_details'], 0, 50)); ?>...
+                                            <div class="card-body p-2">
+                                                <h6 class="card-title text-truncate small" title="<?php echo htmlspecialchars($task['task_details']); ?>">
+                                                    <?php 
+                                                    $task_details = htmlspecialchars($task['task_details']);
+                                                    echo strlen($task_details) > 40 ? substr($task_details, 0, 37) . '...' : $task_details;
+                                                    ?>
                                                 </h6>
                                                 
-                                                <div class="mb-2">
-                                                    <small class="text-muted d-block">Assigned Units</small>
-                                                    <div>
+                                                <div class="mb-1">
+                                                    <small class="text-muted d-block">Units</small>
+                                                    <div class="small">
                                                         <?php 
                                                         if(isset($task['unit_names']) && $task['unit_names']) {
                                                             $units = explode(', ', $task['unit_names']);
-                                                            $displayUnits = array_slice($units, 0, 2);
+                                                            $displayUnits = array_slice($units, 0, 1);
                                                             foreach($displayUnits as $unit) {
-                                                                echo '<span class="badge bg-info me-1">' . htmlspecialchars($unit) . '</span>';
+                                                                $short_unit = strlen($unit) > 15 ? substr($unit, 0, 12) . '...' : $unit;
+                                                                echo '<span class="badge bg-info me-1" title="' . htmlspecialchars($unit) . '">' . htmlspecialchars($short_unit) . '</span>';
                                                             }
-                                                            if(count($units) > 2) {
-                                                                echo '<span class="badge bg-secondary">+' . (count($units)-2) . '</span>';
+                                                            if(count($units) > 1) {
+                                                                echo '<span class="badge bg-secondary" title="' . htmlspecialchars(implode(', ', $units)) . '">+' . (count($units)-1) . '</span>';
                                                             }
                                                         } else {
-                                                            echo '<span class="text-muted">No units assigned</span>';
+                                                            echo '<span class="text-muted">—</span>';
                                                         }
                                                         ?>
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="mb-2">
+                                                <div class="mb-1">
                                                     <small class="text-muted d-block">Progress</small>
-                                                    <div class="progress" style="height: 8px;">
+                                                    <div class="progress" style="height: 5px;">
                                                         <div class="progress-bar bg-<?php echo $statusColor; ?>" 
                                                              style="width: <?php echo $percentage; ?>%">
                                                         </div>
@@ -232,22 +225,18 @@
                                                     <small class="fw-bold"><?php echo $percentage; ?>%</small>
                                                 </div>
                                                 
-                                                <div class="mb-2">
-                                                    <small class="text-muted d-block">Target Date</small>
-                                                    <strong><?php echo htmlspecialchars($task['target_completion_date'] ?? 'N/A'); ?></strong>
+                                                <div class="mb-1">
+                                                    <small class="text-muted d-block">Target</small>
+                                                    <small><?php 
+                                                        $date = $task['target_completion_date'] ?? 'N/A';
+                                                        echo strlen($date) > 10 ? substr($date, 0, 7) . '…' : $date;
+                                                    ?></small>
                                                 </div>
-                                                
-                                                <?php if(isset($task['last_update']) && $task['last_update']): ?>
-                                                <div class="mb-2">
-                                                    <small class="text-muted d-block">Last Update</small>
-                                                    <small><?php echo date('M d, Y', strtotime($task['last_update'])); ?></small>
-                                                </div>
-                                                <?php endif; ?>
                                             </div>
-                                            <div class="card-footer bg-transparent">
+                                            <div class="card-footer bg-transparent p-1">
                                                 <a href="index.php?action=view_task&id=<?php echo $task['task_id']; ?>" 
-                                                   class="btn btn-sm btn-outline-primary w-100">
-                                                    View Details
+                                                   class="btn btn-sm btn-outline-primary w-100 py-0">
+                                                    View
                                                 </a>
                                             </div>
                                         </div>
@@ -256,15 +245,15 @@
                                 </div>
                                 <?php endif; ?>
                                 
-                                <div class="mt-3">
+                                <div class="mt-2 d-flex gap-2">
                                     <a href="index.php?action=view_project&id=<?php echo $project['project_id']; ?>" 
-                                       class="btn btn-primary">
-                                        View Project Details
+                                       class="btn btn-sm btn-primary">
+                                        View Project
                                     </a>
                                     <?php if($_SESSION['role'] == 'admin'): ?>
                                     <a href="index.php?action=create_task_page&project_id=<?php echo $project['project_id']; ?>" 
-                                       class="btn btn-success">
-                                        <i class="bi bi-plus-circle"></i> Add Commitment
+                                       class="btn btn-sm btn-success">
+                                        <i class="bi bi-plus-circle"></i> Add
                                     </a>
                                     <?php endif; ?>
                                 </div>
@@ -274,20 +263,24 @@
                     <?php endforeach; ?>
                 </div>
                 
-                <!-- Carousel Indicators -->
-                <div class="carousel-indicators mt-3">
+                <!-- Carousel Indicators - Simplified -->
+                <div class="carousel-indicators mt-2">
                     <?php 
                     $totalOverviewSlides = count($projectChunks);
                     for($i = 0; $i < $totalOverviewSlides; $i++): 
                     ?>
                     <button type="button" class="indicator <?php echo $i === 0 ? 'active' : ''; ?>" onclick="goToSlide(<?php echo $i; ?>)">
-                        Overview <?php echo $i + 1; ?>
+                        P<?php echo $i + 1; ?>
                     </button>
                     <?php endfor; ?>
                     
                     <?php foreach($projects as $index => $project): ?>
-                    <button type="button" class="indicator" onclick="goToSlide('project_<?php echo $project['project_id']; ?>')">
-                        <?php echo htmlspecialchars(substr($project['project_name'], 0, 10)); ?> (<?php echo htmlspecialchars($project['year'] ?? 'N/A'); ?>)
+                    <button type="button" class="indicator" onclick="goToSlide('project_<?php echo $project['project_id']; ?>')" 
+                            title="<?php echo htmlspecialchars($project['project_name']); ?>">
+                        <?php 
+                        $short_name = substr($project['project_name'], 0, 8);
+                        echo htmlspecialchars($short_name) . (strlen($project['project_name']) > 8 ? '…' : '');
+                        ?>
                     </button>
                     <?php endforeach; ?>
                 </div>
@@ -313,99 +306,63 @@
 </div>
 <?php endif; ?>
 
-<!-- Division Summary Cards (Quick overview) -->
+<!-- Division Summary Cards (Quick overview) - Simplified -->
 <div class="row mb-4">
     <?php if(!empty($division_summary)): ?>
         <?php foreach($division_summary as $summary): ?>
         <?php if($summary && isset($summary['functional_division'])): ?>
         <div class="col-md-<?php echo $_SESSION['role'] == 'admin' ? '3' : '12'; ?> mb-3">
             <div class="card h-100 bg-light">
-                <div class="card-body text-center">
-                    <h5 class="card-title"><?php echo $summary['functional_division']; ?> Division</h5>
-                    <h2><?php echo $summary['total_projects']; ?></h2>
-                    <p class="text-muted">Total Projects</p>
-                    <?php if(isset($summary['total_tasks'])): ?>
-                    <div class="small">
-                        <span class="badge bg-success"><?php echo $summary['completed_tasks'] ?? 0; ?> completed tasks</span>
-                        <span class="badge bg-info"><?php echo $summary['total_tasks'] ?? 0; ?> total tasks</span>
-                    </div>
-                    <?php endif; ?>
+                <div class="card-body text-center p-3">
+                    <h6 class="card-title"><?php echo $summary['functional_division']; ?></h6>
+                    <h3><?php echo $summary['total_projects']; ?></h3>
+                    <small class="text-muted">Projects</small>
                 </div>
             </div>
         </div>
         <?php endif; ?>
         <?php endforeach; ?>
-    <?php else: ?>
-        <div class="col-12">
-            <div class="alert alert-warning text-center">
-                <i class="bi bi-exclamation-triangle"></i> No division summary data available.
-            </div>
-        </div>
     <?php endif; ?>
 </div>
 
-<!-- Recent Tasks -->
+<!-- Recent Tasks - Simplified -->
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Tasks</h5>
-                <?php if(isset($selected_year) && $selected_year): ?>
-                <span class="badge bg-info">Filtered by Year: <?php echo htmlspecialchars($selected_year); ?></span>
-                <?php endif; ?>
+            <div class="card-header py-2">
+                <h6 class="mb-0">Recent Tasks</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-2">
                 <div class="row">
                     <?php if(empty($recent_tasks)): ?>
                     <div class="col-12">
-                        <p class="text-muted text-center">
+                        <p class="text-muted text-center small my-2">
                             <?php if(isset($selected_year) && $selected_year): ?>
-                                No recent tasks found for year <strong><?php echo htmlspecialchars($selected_year); ?></strong>.
+                                No tasks for <?php echo $selected_year; ?>
                             <?php else: ?>
-                                No recent tasks found.
+                                No tasks found
                             <?php endif; ?>
                         </p>
                     </div>
                     <?php else: ?>
                         <?php foreach($recent_tasks as $task): 
                             $percentage = $task['current_percentage'] ?? 0;
-                            $statusColor = $percentage >= 100 ? 'success' : ($percentage > 0 ? 'warning' : 'secondary');
                         ?>
-                        <div class="col-md-3 mb-3">
-                            <div class="card h-100 border-<?php echo $statusColor; ?>">
-                                <div class="card-header bg-<?php echo $statusColor; ?> text-white d-flex justify-content-between align-items-center">
-                                    <small class="text-truncate"><?php echo htmlspecialchars($task['project_name'] ?? 'No Project'); ?></small>
-                                    <span class="badge bg-light text-dark">Year: <?php echo htmlspecialchars($task['year'] ?? 'N/A'); ?></span>
-                                </div>
-                                <div class="card-body">
-                                    <h6 class="card-title text-truncate" title="<?php echo htmlspecialchars($task['task_details']); ?>">
-                                        <?php echo htmlspecialchars(substr($task['task_details'], 0, 40)); ?>...
-                                    </h6>
-                                    
-                                    <div class="mb-2">
-                                        <span class="badge bg-<?php 
-                                            echo $task['functional_division'] == 'OSDS' ? 'primary' : 
-                                                ($task['functional_division'] == 'CID' ? 'success' : 
-                                                ($task['functional_division'] == 'SGOD' ? 'info' : 'secondary')); 
-                                        ?>">
-                                            <?php echo $task['functional_division']; ?>
+                        <div class="col-md-3 mb-2">
+                            <div class="card h-100">
+                                <div class="card-body p-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-<?php echo $percentage >= 100 ? 'success' : ($percentage > 0 ? 'warning' : 'secondary'); ?> text-white" style="font-size: 0.6rem;">
+                                            <?php echo $percentage; ?>%
                                         </span>
+                                        <small><?php echo htmlspecialchars($task['year'] ?? 'N/A'); ?></small>
                                     </div>
-                                    
-                                    <div class="mb-2">
-                                        <small class="text-muted d-block">Progress</small>
-                                        <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-<?php echo $statusColor; ?>" 
-                                                 style="width: <?php echo $percentage; ?>%">
-                                            </div>
-                                        </div>
-                                        <small class="fw-bold"><?php echo $percentage; ?>%</small>
-                                    </div>
-                                </div>
-                                <div class="card-footer bg-transparent">
+                                    <p class="card-text small text-truncate mt-1" title="<?php echo htmlspecialchars($task['task_details']); ?>">
+                                        <?php echo htmlspecialchars(substr($task['task_details'], 0, 25)); ?>...
+                                    </p>
                                     <a href="index.php?action=view_task&id=<?php echo $task['task_id']; ?>" 
-                                       class="btn btn-sm btn-outline-primary w-100">
-                                        View Details
+                                       class="btn btn-sm btn-outline-primary w-100 py-0" style="font-size: 0.7rem;">
+                                        View
                                     </a>
                                 </div>
                             </div>
@@ -447,20 +404,20 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 5px;
+    margin-top: 10px;
     position: relative;
     bottom: 0;
 }
 
 .carousel-indicators .indicator {
-    padding: 5px 10px;
-    border-radius: 20px;
+    padding: 2px 6px;
+    border-radius: 12px;
     border: 1px solid #ddd;
     background-color: #f8f9fa;
     color: #495057;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     transition: all 0.3s;
 }
 
@@ -468,15 +425,6 @@
     background-color: #007bff;
     color: white;
     border-color: #007bff;
-    transform: scale(1.05);
-}
-
-.carousel-indicators .indicator:hover {
-    background-color: #e9ecef;
-}
-
-.carousel-indicators .indicator.active:hover {
-    background-color: #0056b3;
 }
 
 /* Card hover effects */
@@ -494,25 +442,29 @@
     transition: width 0.3s ease;
 }
 
-/* Text truncation for long names */
-.text-truncate {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+/* Smaller text for compact display */
+.small {
+    font-size: 0.7rem;
 }
 
-/* Card body spacing */
+/* Card body padding reduction */
 .card-body {
-    padding: 1rem;
-}
-
-.card-body small {
-    font-size: 0.75rem;
+    padding: 0.75rem;
 }
 
 .card-footer {
-    padding: 0.75rem 1rem;
+    padding: 0.25rem;
+}
+
+/* Button text size */
+.btn-sm {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Badge adjustments */
+.badge {
+    font-size: 0.6rem;
 }
 </style>
 
@@ -590,23 +542,13 @@ function showSlide(slideId) {
     const statusEl = document.getElementById('carousel-status');
     const currentIndex = slideOrder.indexOf(slideId) + 1;
     const totalSlides = slideOrder.length;
-    
-    if (slideId === '0') {
-        statusEl.textContent = `Core Area Overview 1/${totalSlides}`;
-    } else if (!isNaN(parseInt(slideId))) {
-        statusEl.textContent = `Core Area Overview ${parseInt(slideId) + 1}/${totalSlides}`;
-    } else {
-        const projectHeader = document.querySelector(`.carousel-slide[data-slide="${slideId}"] .card-header h5`);
-        if (projectHeader) {
-            statusEl.textContent = `${projectHeader.textContent} ${currentIndex}/${totalSlides}`;
-        }
-    }
+    statusEl.textContent = `${currentIndex}/${totalSlides}`;
     
     currentSlide = slideId;
 }
 
 function nextSlide() {
-    if (isTransitioning) return; // Don't allow next slide during transition
+    if (isTransitioning) return;
     const currentIndex = slideOrder.indexOf(currentSlide);
     let nextIndex = (currentIndex + 1) % slideOrder.length;
     showSlide(slideOrder[nextIndex]);
@@ -614,7 +556,7 @@ function nextSlide() {
 }
 
 function prevSlide() {
-    if (isTransitioning) return; // Don't allow previous slide during transition
+    if (isTransitioning) return;
     const currentIndex = slideOrder.indexOf(currentSlide);
     let prevIndex = (currentIndex - 1 + slideOrder.length) % slideOrder.length;
     showSlide(slideOrder[prevIndex]);
@@ -622,7 +564,7 @@ function prevSlide() {
 }
 
 function goToSlide(slideId) {
-    if (isTransitioning) return; // Don't allow navigation during transition
+    if (isTransitioning) return;
     showSlide(slideId);
     resetAutoPlay();
 }
@@ -637,10 +579,10 @@ function startAutoPlay() {
         clearInterval(autoPlayInterval);
     }
     autoPlayInterval = setInterval(() => {
-        if (!isTransitioning) { // Only auto-advance if not transitioning
+        if (!isTransitioning) {
             nextSlide();
         }
-    }, 10000); // 10 seconds
+    }, 10000);
 }
 
 function resetAutoPlay() {
@@ -650,14 +592,12 @@ function resetAutoPlay() {
     startAutoPlay();
 }
 
-// Initialize slides - make sure only the first slide is visible
+// Initialize slides
 document.addEventListener('DOMContentLoaded', function() {
-    // Hide all slides first
     document.querySelectorAll('.carousel-slide').forEach(slide => {
         slide.style.display = 'none';
     });
     
-    // Show the first slide
     const firstSlide = document.querySelector('.carousel-slide[data-slide="0"]');
     if (firstSlide) {
         firstSlide.style.display = 'block';
@@ -666,7 +606,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     startAutoPlay();
     
-    // Pause autoplay when user hovers over carousel
     const carousel = document.getElementById('projectCarousel');
     if (carousel) {
         carousel.addEventListener('mouseenter', () => {
@@ -680,7 +619,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Also pause when clicking indicators
     document.querySelectorAll('.indicator').forEach(indicator => {
         indicator.addEventListener('click', () => {
             resetAutoPlay();
