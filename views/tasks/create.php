@@ -2,11 +2,7 @@
 
 <div class="container-fluid px-4">
     <h1 class="mt-4">Create New Task</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="index.php?action=dashboard">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="index.php?action=tasks">Tasks</a></li>
-        <li class="breadcrumb-item active">Create Task</li>
-    </ol>
+
 
     <?php if(isset($_SESSION['error'])): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">

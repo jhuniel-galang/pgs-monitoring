@@ -1,5 +1,60 @@
 <?php require_once 'views/layout/header.php'; ?>
 
+<!-- Year Filter -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="index.php" class="row align-items-end">
+                    <input type="hidden" name="action" value="dashboard">
+                    
+                    <div class="col-md-3">
+                        <label for="year" class="form-label fw-bold">Select Year</label>
+                        <select class="form-select form-select-lg" id="year" name="year" onchange="this.form.submit()">
+                            <option value="">All Years</option>
+                            <option value="2026" <?php echo (isset($selected_year) && $selected_year == '2026') ? 'selected' : ''; ?>>2026</option>
+                            <option value="2027" <?php echo (isset($selected_year) && $selected_year == '2027') ? 'selected' : ''; ?>>2027</option>
+                            <?php 
+                            // Dynamically add years from projects if available
+                            if(isset($available_years) && !empty($available_years)):
+                                foreach($available_years as $year):
+                                    if($year != '2026' && $year != '2027'):
+                            ?>
+                            <option value="<?php echo htmlspecialchars($year); ?>" <?php echo (isset($selected_year) && $selected_year == $year) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($year); ?>
+                            </option>
+                            <?php 
+                                    endif;
+                                endforeach;
+                            endif; 
+                            ?>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                        <?php if(isset($selected_year) && $selected_year != ''): ?>
+                        <a href="index.php?action=dashboard" class="btn btn-secondary">Clear</a>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="col-md-6 text-end">
+                        <?php if(isset($selected_year) && $selected_year): ?>
+                        <div class="alert alert-info py-2 mb-0">
+                            <i class="bi bi-calendar-check"></i> 
+                            Showing data for <strong><?php echo htmlspecialchars($selected_year); ?></strong>
+                            <?php if(isset($filtered_project_count) && isset($filtered_task_count)): ?>
+                            (<?php echo $filtered_project_count; ?> core areas, <?php echo $filtered_task_count; ?> commitments)
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Projects Carousel -->
 <?php if(isset($projects) && !empty($projects)): ?>
 <div class="row mb-4">
@@ -53,6 +108,10 @@
                                             <strong><?php echo $project['functional_division']; ?></strong>
                                         </div>
                                         <div class="mb-2">
+                                            <small class="text-muted d-block">Year</small>
+                                            <span class="badge bg-dark"><?php echo htmlspecialchars($project['year'] ?? 'N/A'); ?></span>
+                                        </div>
+                                        <div class="mb-2">
                                             <small class="text-muted d-block">Progress</small>
                                             <div class="progress" style="height: 8px;">
                                                 <div class="progress-bar bg-<?php 
@@ -96,6 +155,7 @@
                                 <h5 class="mb-0">
                                     <i class="bi bi-list-task"></i> 
                                     <?php echo htmlspecialchars($project['project_name']); ?> - Commitments
+                                    <span class="badge bg-light text-dark ms-2">Year: <?php echo htmlspecialchars($project['year'] ?? 'N/A'); ?></span>
                                 </h5>
                                 <button class="btn btn-sm btn-light" onclick="goToSlide(0)">
                                     <i class="bi bi-arrow-left"></i> Back to Overview
@@ -103,15 +163,21 @@
                             </div>
                             <div class="card-body">
                                 <?php
-                                // Get tasks for this project
-                                $project_tasks = array_filter($all_tasks ?? [], function($task) use ($project) {
-                                    return ($task['project_id'] ?? 0) == $project['project_id'];
+                                // Get tasks for this project (filtered by year if selected)
+                                $project_tasks = array_filter($all_tasks ?? [], function($task) use ($project, $selected_year) {
+                                    $task_match = ($task['project_id'] ?? 0) == $project['project_id'];
+                                    // Apply year filter if selected
+                                    if($selected_year && $task_match) {
+                                        return isset($task['year']) && $task['year'] == $selected_year;
+                                    }
+                                    return $task_match;
                                 });
                                 ?>
                                 
                                 <?php if(empty($project_tasks)): ?>
                                 <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> No commitments found for this project.
+                                    <i class="bi bi-info-circle"></i> No commitments found for this project 
+                                    <?php if($selected_year): ?>in <strong><?php echo $selected_year; ?></strong><?php endif; ?>.
                                     <?php if($_SESSION['role'] == 'admin'): ?>
                                     <a href="index.php?action=create_task_page&project_id=<?php echo $project['project_id']; ?>" class="alert-link">
                                         Create a Commitment
@@ -129,7 +195,7 @@
                                         <div class="card h-100 border-<?php echo $statusColor; ?>">
                                             <div class="card-header bg-<?php echo $statusColor; ?> text-white d-flex justify-content-between align-items-center">
                                                 <span class="badge bg-light text-dark">Priority: <?php echo ucfirst($task['priority'] ?? 'medium'); ?></span>
-                                                <small>ID: <?php echo $task['task_id']; ?></small>
+                                                <small>Year: <?php echo htmlspecialchars($task['year'] ?? 'N/A'); ?></small>
                                             </div>
                                             <div class="card-body">
                                                 <h6 class="card-title text-truncate" title="<?php echo htmlspecialchars($task['task_details']); ?>">
@@ -221,7 +287,7 @@
                     
                     <?php foreach($projects as $index => $project): ?>
                     <button type="button" class="indicator" onclick="goToSlide('project_<?php echo $project['project_id']; ?>')">
-                        <?php echo htmlspecialchars(substr($project['project_name'], 0, 10)); ?>
+                        <?php echo htmlspecialchars(substr($project['project_name'], 0, 10)); ?> (<?php echo htmlspecialchars($project['year'] ?? 'N/A'); ?>)
                     </button>
                     <?php endforeach; ?>
                 </div>
@@ -233,7 +299,12 @@
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No projects found. 
+            <i class="bi bi-info-circle"></i> 
+            <?php if(isset($selected_year) && $selected_year): ?>
+                No projects found for year <strong><?php echo htmlspecialchars($selected_year); ?></strong>.
+            <?php else: ?>
+                No projects found.
+            <?php endif; ?>
             <?php if($_SESSION['role'] == 'admin'): ?>
             <a href="index.php?action=projects" class="alert-link">Create your first project</a>
             <?php endif; ?>
@@ -244,36 +315,56 @@
 
 <!-- Division Summary Cards (Quick overview) -->
 <div class="row mb-4">
-    <?php foreach($division_summary as $summary): ?>
-    <?php if($summary && $summary['functional_division']): ?>
-    <div class="col-md-<?php echo $_SESSION['role'] == 'admin' ? '3' : '12'; ?> mb-3">
-        <div class="card h-100 bg-light">
-            <div class="card-body text-center">
-                <h5 class="card-title"><?php echo $summary['functional_division']; ?> Division</h5>
-                <h2><?php echo $summary['total_projects']; ?></h2>
-                <p class="text-muted">Total Projects</p>
-                <div class="small">
-                    <span class="badge bg-success"><?php echo $summary['completed_tasks'] ?? 0; ?> completed tasks</span>
+    <?php if(!empty($division_summary)): ?>
+        <?php foreach($division_summary as $summary): ?>
+        <?php if($summary && isset($summary['functional_division'])): ?>
+        <div class="col-md-<?php echo $_SESSION['role'] == 'admin' ? '3' : '12'; ?> mb-3">
+            <div class="card h-100 bg-light">
+                <div class="card-body text-center">
+                    <h5 class="card-title"><?php echo $summary['functional_division']; ?> Division</h5>
+                    <h2><?php echo $summary['total_projects']; ?></h2>
+                    <p class="text-muted">Total Projects</p>
+                    <?php if(isset($summary['total_tasks'])): ?>
+                    <div class="small">
+                        <span class="badge bg-success"><?php echo $summary['completed_tasks'] ?? 0; ?> completed tasks</span>
+                        <span class="badge bg-info"><?php echo $summary['total_tasks'] ?? 0; ?> total tasks</span>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
-    </div>
+        <?php endif; ?>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                <i class="bi bi-exclamation-triangle"></i> No division summary data available.
+            </div>
+        </div>
     <?php endif; ?>
-    <?php endforeach; ?>
 </div>
 
 <!-- Recent Tasks -->
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
-                <h5>Recent Tasks</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Tasks</h5>
+                <?php if(isset($selected_year) && $selected_year): ?>
+                <span class="badge bg-info">Filtered by Year: <?php echo htmlspecialchars($selected_year); ?></span>
+                <?php endif; ?>
             </div>
             <div class="card-body">
                 <div class="row">
                     <?php if(empty($recent_tasks)): ?>
                     <div class="col-12">
-                        <p class="text-muted text-center">No recent tasks found.</p>
+                        <p class="text-muted text-center">
+                            <?php if(isset($selected_year) && $selected_year): ?>
+                                No recent tasks found for year <strong><?php echo htmlspecialchars($selected_year); ?></strong>.
+                            <?php else: ?>
+                                No recent tasks found.
+                            <?php endif; ?>
+                        </p>
                     </div>
                     <?php else: ?>
                         <?php foreach($recent_tasks as $task): 
@@ -284,7 +375,7 @@
                             <div class="card h-100 border-<?php echo $statusColor; ?>">
                                 <div class="card-header bg-<?php echo $statusColor; ?> text-white d-flex justify-content-between align-items-center">
                                     <small class="text-truncate"><?php echo htmlspecialchars($task['project_name'] ?? 'No Project'); ?></small>
-                                    <span class="badge bg-light text-dark"><?php echo ucfirst($task['priority'] ?? 'medium'); ?></span>
+                                    <span class="badge bg-light text-dark">Year: <?php echo htmlspecialchars($task['year'] ?? 'N/A'); ?></span>
                                 </div>
                                 <div class="card-body">
                                     <h6 class="card-title text-truncate" title="<?php echo htmlspecialchars($task['task_details']); ?>">

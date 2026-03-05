@@ -234,13 +234,23 @@ class TaskController {
     public function dashboard() {
     $user = $this->auth->getCurrentUser();
     
+    // Get selected year from URL parameter
+    $selected_year = isset($_GET['year']) && !empty($_GET['year']) ? $_GET['year'] : null;
+    
     // Get projects with their task summaries
     require_once __DIR__ . '/../models/Project.php';
     $projectModel = new Project();
     
+    // Get available years for the filter dropdown
+    $available_years = $projectModel->getDistinctYears();
+    
     if($user['role'] == 'admin') {
-        // For admin: get all projects
-        $projects = $projectModel->getAllProjects([], 100, 0);
+        // For admin: get all projects with year filter
+        $filters = [];
+        if ($selected_year) {
+            $filters['year'] = $selected_year;
+        }
+        $projects = $projectModel->getAllProjects($filters, 100, 0);
         
         // Group projects by division and calculate summaries
         $division_summary = [];
@@ -274,13 +284,23 @@ class TaskController {
         // Get ALL tasks for the project task slides
         $all_tasks = $this->task->getAllTasks();
         
-        // Get recent tasks (5 most recent)
-        $recent_tasks = $this->task->getAllTasks();
+        // Filter tasks by year if selected
+        if ($selected_year) {
+            $all_tasks = array_filter($all_tasks, function($task) use ($selected_year) {
+                return isset($task['year']) && $task['year'] == $selected_year;
+            });
+        }
+        
+        // Get recent tasks (5 most recent) - filtered by year
+        $recent_tasks = $all_tasks;
         $recent_tasks = array_slice($recent_tasks, 0, 5);
         
     } else {
-        // For encoder: get only their division projects
+        // For encoder: get only their division projects with year filter
         $filters = ['division' => $user['functional_division']];
+        if ($selected_year) {
+            $filters['year'] = $selected_year;
+        }
         $projects = $projectModel->getAllProjects($filters, 100, 0);
         
         // Calculate summary for encoder's division
@@ -303,14 +323,26 @@ class TaskController {
             'average_progress' => $total_projects > 0 ? round($total_progress / $total_projects, 2) : 0
         ]];
         
-        // Get ALL tasks for encoder (only their division)
+        // Get ALL tasks for encoder (only their division) with year filter
         $all_tasks = $this->task->getTasksByDivisionForEncoder($user['functional_division']);
         
-        // Get recent tasks for encoder (only their division)
-        $recent_tasks = $this->task->getTasksByDivisionForEncoder($user['functional_division']);
+        // Filter tasks by year if selected
+        if ($selected_year) {
+            $all_tasks = array_filter($all_tasks, function($task) use ($selected_year) {
+                return isset($task['year']) && $task['year'] == $selected_year;
+            });
+        }
+        
+        // Get recent tasks for encoder (only their division) - filtered by year
+        $recent_tasks = $all_tasks;
         $recent_tasks = array_slice($recent_tasks, 0, 5);
     }
     
+    // Count filtered projects and tasks
+    $filtered_project_count = count($projects);
+    $filtered_task_count = count($all_tasks);
+    
+    // Pass all variables to the view
     require_once __DIR__ . '/../views/tasks/dashboard.php';
 }
 
