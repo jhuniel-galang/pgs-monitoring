@@ -14,8 +14,51 @@ $action = isset($_GET['action']) ? $_GET['action'] : 'login';
 switch($action) {
     // Auth routes
     case 'login':
-        require_once 'views/auth/login.php';
-        break;
+    // For public view, we need to load projects for the slideshow
+    require_once 'models/Project.php';
+    require_once 'models/Task.php';
+    
+    $projectModel = new Project();
+    $taskModel = new Task();
+    
+    // Get selected year from URL parameter
+    $selected_year = isset($_GET['year']) && !empty($_GET['year']) ? $_GET['year'] : '2026';
+    
+    // Get available years for the filter dropdown
+    $available_years = $projectModel->getDistinctYears();
+    
+    // Get projects filtered by year
+    $filters = [];
+    if ($selected_year) {
+        $filters['year'] = $selected_year;
+    }
+    $projects = $projectModel->getAllProjects($filters, 100, 0);
+    
+    // Get all tasks
+    $all_tasks = $taskModel->getAllTasks();
+    
+    // Filter tasks by year if selected
+    if ($selected_year) {
+        $all_tasks = array_filter($all_tasks, function($task) use ($selected_year) {
+            return isset($task['year']) && $task['year'] == $selected_year;
+        });
+    }
+    
+    // Get division summary
+    $division_summary = $projectModel->getProjectSummary($selected_year);
+    
+    // Get recent tasks
+    $recent_tasks = array_slice($all_tasks, 0, 8);
+    
+    // Count filtered projects and tasks
+    $filtered_project_count = count($projects);
+    $filtered_task_count = count($all_tasks);
+    
+    // Store error if any from authentication
+    $error = isset($_GET['error']) ? $_GET['error'] : '';
+    
+    require_once 'views/auth/login.php';
+    break;
         
     case 'authenticate':
         require_once 'controllers/AuthController.php';
@@ -262,6 +305,8 @@ case 'delete_task_direct':
     $taskController = new TaskController();
     $taskController->deleteDirect($_GET['id'] ?? 0);
     break;
+
+    
 
         // 404 page
         header("HTTP/1.0 404 Not Found");
