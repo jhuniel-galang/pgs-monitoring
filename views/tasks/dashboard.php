@@ -1,5 +1,41 @@
 <?php require_once 'views/layout/header.php'; ?>
 
+<!-- Music Player Control -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card bg-light border-0 shadow-sm">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-music-note-beamed text-primary me-2" style="font-size: 1.2rem;"></i>
+                        <span class="fw-semibold me-3">Background Music</span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary me-3" id="music-status">Playing</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="playPauseBtn" onclick="togglePlayPause()">
+                            <i class="bi bi-pause-fill" id="playPauseIcon"></i> <span id="playPauseText">Pause</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="muteBtn" onclick="toggleMute()">
+                            <i class="bi bi-volume-up-fill" id="muteIcon"></i> <span id="muteText">Mute</span>
+                        </button>
+                        <div class="d-flex align-items-center ms-2">
+                            <i class="bi bi-volume-down me-1"></i>
+                            <input type="range" class="form-range" id="volumeSlider" min="0" max="100" value="50" style="width: 100px;" onchange="changeVolume(this.value)">
+                            <i class="bi bi-volume-up ms-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Audio Element -->
+<audio id="backgroundMusic" loop style="display: none;">
+    <source src="assets/music/step up final m ix one (1).mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
 <!-- Projects Carousel -->
 <?php if(isset($projects) && !empty($projects)): ?>
 <div class="row mb-4">
@@ -466,9 +502,100 @@
 .badge {
     font-size: 0.6rem;
 }
+
+/* Volume slider styling */
+.form-range {
+    height: 0.5rem;
+}
+
+.form-range::-webkit-slider-thumb {
+    background: #007bff;
+}
+
+.form-range::-moz-range-thumb {
+    background: #007bff;
+}
+
+.form-range::-ms-thumb {
+    background: #007bff;
+}
 </style>
 
 <script>
+// Music player controls
+let audio = document.getElementById('backgroundMusic');
+let isPlaying = true;
+let isMuted = false;
+
+// Initialize audio
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial volume to 50%
+    audio.volume = 0.5;
+    
+    // Try to play audio (may be blocked by browser autoplay policies)
+    audio.play().catch(function(error) {
+        console.log("Autoplay was prevented. User needs to interact with the page first.");
+        // Update UI to show paused state
+        isPlaying = false;
+        document.getElementById('playPauseIcon').className = 'bi bi-play-fill';
+        document.getElementById('playPauseText').textContent = 'Play';
+        document.getElementById('music-status').textContent = 'Paused';
+        document.getElementById('music-status').className = 'badge bg-secondary bg-opacity-10 text-secondary me-3';
+    });
+});
+
+function togglePlayPause() {
+    if (isPlaying) {
+        audio.pause();
+        document.getElementById('playPauseIcon').className = 'bi bi-play-fill';
+        document.getElementById('playPauseText').textContent = 'Play';
+        document.getElementById('music-status').textContent = 'Paused';
+        document.getElementById('music-status').className = 'badge bg-secondary bg-opacity-10 text-secondary me-3';
+    } else {
+        audio.play();
+        document.getElementById('playPauseIcon').className = 'bi bi-pause-fill';
+        document.getElementById('playPauseText').textContent = 'Pause';
+        document.getElementById('music-status').textContent = 'Playing';
+        document.getElementById('music-status').className = 'badge bg-primary bg-opacity-10 text-primary me-3';
+    }
+    isPlaying = !isPlaying;
+}
+
+function toggleMute() {
+    if (isMuted) {
+        audio.muted = false;
+        document.getElementById('muteIcon').className = 'bi bi-volume-up-fill';
+        document.getElementById('muteText').textContent = 'Mute';
+    } else {
+        audio.muted = true;
+        document.getElementById('muteIcon').className = 'bi bi-volume-mute-fill';
+        document.getElementById('muteText').textContent = 'Unmute';
+    }
+    isMuted = !isMuted;
+}
+
+function changeVolume(value) {
+    audio.volume = value / 100;
+    
+    // Update mute state if volume is 0
+    if (value == 0) {
+        if (!isMuted) {
+            audio.muted = true;
+            document.getElementById('muteIcon').className = 'bi bi-volume-mute-fill';
+            document.getElementById('muteText').textContent = 'Unmute';
+            isMuted = true;
+        }
+    } else {
+        if (isMuted) {
+            audio.muted = false;
+            document.getElementById('muteIcon').className = 'bi bi-volume-up-fill';
+            document.getElementById('muteText').textContent = 'Mute';
+            isMuted = false;
+        }
+    }
+}
+
+// Carousel variables and functions
 let currentSlide = '0';
 let autoPlayInterval;
 let slideOrder = [];
@@ -594,6 +721,7 @@ function resetAutoPlay() {
 
 // Initialize slides
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize carousel
     document.querySelectorAll('.carousel-slide').forEach(slide => {
         slide.style.display = 'none';
     });

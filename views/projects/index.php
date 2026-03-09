@@ -108,7 +108,7 @@
 <!-- Filter Section - Change year dropdown to text input -->
 <div class="card mb-4">
     <div class="card-header bg-light">
-        <h5 class="mb-0">Filter Projects</h5>
+        <h5 class="mb-0">Filter Core Area</h5>
     </div>
     <div class="card-body">
         <form method="GET" action="index.php" class="row g-3">
@@ -117,7 +117,7 @@
             <div class="col-md-3">
                 <label for="search" class="form-label">Search</label>
                 <input type="text" class="form-control" id="search" name="search" 
-                       placeholder="Search by project name..." 
+                       placeholder="Search by Core Area name..." 
                        value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
             </div>
             
@@ -174,10 +174,10 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Project Name</th>
+                        <th>Core Area Name</th>
                         <th>Division</th>
                         <th>Year</th>
-                        <th>Project Lead</th>
+                        <th>Core Area Lead</th>
                         <th>Priority</th>
                         <th>Progress</th>
                         <th>Actions</th>
@@ -186,7 +186,7 @@
                 <tbody>
                     <?php if(empty($projects)): ?>
                     <tr>
-                        <td colspan="8" class="text-center">No projects found matching your filters.</td>
+                        <td colspan="8" class="text-center">No Core area found matching your filters.</td>
                     </tr>
                     <?php else: ?>
                         <?php foreach($projects as $project): ?>
@@ -317,14 +317,14 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Create New Project</h5>
+                <h5 class="modal-title">Create New Core Area</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="index.php?action=store_project" method="POST">
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="project_name" class="form-label">Project Name <span class="text-danger">*</span></label>
+                            <label for="project_name" class="form-label">Core Area Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="project_name" name="project_name" required>
                         </div>
                         
@@ -353,7 +353,7 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label for="project_lead" class="form-label">Project Lead</label>
+                            <label for="project_lead" class="form-label">Core Area Lead</label>
                             <input type="text" class="form-control" id="project_lead" name="project_lead">
                         </div>
                         

@@ -1,8 +1,7 @@
 <?php require_once 'views/layout/header.php'; ?>
 
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Create New Task</h1>
-
+    <h1 class="mt-4">Create New Commitment</h1>
 
     <?php if(isset($_SESSION['error'])): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -17,27 +16,62 @@
     <div class="card mb-4">
         <div class="card-header">
             <i class="fas fa-plus-circle me-1"></i>
-            Task Details
+            Commitment Details
         </div>
         <div class="card-body">
             <form action="index.php?action=create_task" method="POST" id="taskForm">
                 <div class="mb-3">
-                    <label for="task_details" class="form-label">Task Details <span class="text-danger">*</span></label>
+                    <label for="task_details" class="form-label">Commitment Details <span class="text-danger">*</span></label>
                     <textarea class="form-control" id="task_details" name="task_details" rows="4" required></textarea>
                 </div>
 
                 <div class="row">
+                    <!-- Year Dropdown First -->
                     <div class="col-md-6 mb-3">
-                        <label for="project_id" class="form-label">Project (Optional)</label>
+                        <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
+                        <select class="form-select" id="year" name="year" required onchange="filterProjectsByYear()">
+                            <option value="">Select Year</option>
+                            <?php 
+                            // Get distinct years from projects
+                            $available_years = [];
+                            if(isset($projects) && !empty($projects)) {
+                                foreach($projects as $project) {
+                                    if(!empty($project['year']) && !in_array($project['year'], $available_years)) {
+                                        $available_years[] = $project['year'];
+                                    }
+                                }
+                                // Sort years descending
+                                rsort($available_years);
+                            }
+                            
+                            // If no years from projects, provide default options
+                            if(empty($available_years)) {
+                                $available_years = ['2027', '2026', '2025', '2024'];
+                            }
+                            
+                            foreach($available_years as $year): 
+                            ?>
+                            <option value="<?php echo htmlspecialchars($year); ?>">
+                                <?php echo htmlspecialchars($year); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="text-muted">Select year to filter projects</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="project_id" class="form-label">Core Area (Optional)</label>
                         <select class="form-select" id="project_id" name="project_id" onchange="loadProjectDetails()">
-                            <option value="">No Project</option>
+                            <option value="">No Core Area</option>
                             <?php if(isset($projects) && !empty($projects)): ?>
                                 <?php foreach($projects as $project): ?>
                                 <option value="<?php echo $project['id']; ?>" 
                                         data-division="<?php echo $project['functional_division']; ?>"
                                         data-target-date="<?php echo $project['target_end_date']; ?>"
-                                        data-budget="<?php echo $project['budget_allocation']; ?>">
-                                    <?php echo htmlspecialchars($project['project_name']); ?>
+                                        data-budget="<?php echo $project['budget_allocation']; ?>"
+                                        data-year="<?php echo $project['year']; ?>"
+                                        class="project-option year-<?php echo htmlspecialchars($project['year']); ?>">
+                                    <?php echo htmlspecialchars($project['project_name']); ?> (<?php echo htmlspecialchars($project['year']); ?>)
                                 </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -62,14 +96,6 @@
                         <input type="text" class="form-control" id="target_completion_date" name="target_completion_date" 
                                placeholder="e.g., Quarterly, Annually, or specific date" required>
                     </div>
-
-                    <div class="col-md-6 mb-3">
-    <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
-    <input type="text" class="form-control" id="year" name="year" 
-           placeholder="e.g., 2024, 2025, SY 2024-2025" 
-           value="<?php echo date('Y'); ?>" required>
-    <small class="text-muted">Enter the year for this commitment</small>
-</div>
 
                     <div class="col-md-6 mb-3">
                         <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
@@ -141,7 +167,7 @@
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Create Task</button>
+                    <button type="submit" class="btn btn-primary">Create Commitment</button>
                     <a href="index.php?action=tasks" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
@@ -160,6 +186,38 @@ var allUnits = <?php echo json_encode(array_map(function($unit) {
     ];
 }, $units)); ?>;
 
+// Function to filter projects by selected year
+function filterProjectsByYear() {
+    var yearSelect = document.getElementById('year');
+    var selectedYear = yearSelect.value;
+    var projectSelect = document.getElementById('project_id');
+    var options = projectSelect.getElementsByTagName('option');
+    
+    // Reset project select
+    projectSelect.value = '';
+    
+    // Show/hide projects based on year
+    for(var i = 0; i < options.length; i++) {
+        var option = options[i];
+        if(i === 0) continue; // Skip the first option (No Project)
+        
+        var optionYear = option.getAttribute('data-year');
+        
+        if(selectedYear === '' || optionYear === selectedYear) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    }
+    
+    // If no year selected, show all projects
+    if(selectedYear === '') {
+        for(var i = 1; i < options.length; i++) {
+            options[i].style.display = '';
+        }
+    }
+}
+
 // Load project details when a project is selected
 function loadProjectDetails() {
     var projectSelect = document.getElementById('project_id');
@@ -170,19 +228,19 @@ function loadProjectDetails() {
         var division = selectedOption.getAttribute('data-division');
         var targetDate = selectedOption.getAttribute('data-target-date');
         var budget = selectedOption.getAttribute('data-budget');
+        var year = selectedOption.getAttribute('data-year');
         
         // Auto-fill the division field
         if (division) {
             document.getElementById('functional_division').value = division;
         }
         
-        // Optionally auto-fill other fields (commented out as per your request to remove them)
-        // if (targetDate) {
-        //     document.getElementById('target_completion_date').value = targetDate;
-        // }
-        // if (budget) {
-        //     document.getElementById('budget_allocation').value = budget;
-        // }
+        // Auto-fill the year field if not already selected
+        var yearSelect = document.getElementById('year');
+        if (year && yearSelect.value !== year) {
+            yearSelect.value = year;
+            filterProjectsByYear(); // Re-filter projects based on this year
+        }
     }
 }
 
@@ -330,6 +388,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+    
+    // Initial filter if year is selected
+    var yearSelect = document.getElementById('year');
+    if (yearSelect.value) {
+        filterProjectsByYear();
+    }
 });
 
 // Form validation - ensure at least one unit is selected
@@ -347,6 +411,15 @@ document.querySelector('form').addEventListener('submit', function(e) {
     if (!checked) {
         e.preventDefault();
         alert('Please select at least one unit for this task.');
+        return false;
+    }
+    
+    // Validate year is selected
+    var yearSelect = document.getElementById('year');
+    if (!yearSelect.value) {
+        e.preventDefault();
+        alert('Please select a year for this task.');
+        return false;
     }
 });
 </script>
@@ -390,6 +463,28 @@ document.querySelector('form').addEventListener('submit', function(e) {
 }
 .text-secondary {
     color: #6c757d !important;
+}
+
+/* Year dropdown styling */
+#year {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    font-weight: 500;
+}
+
+#year option {
+    font-weight: normal;
+}
+
+/* Project options hidden by year filter */
+.project-option {
+    transition: all 0.2s ease;
+}
+
+/* Highlight when year matches */
+.project-option[style*="display: block"],
+.project-option[style*="display: block"] {
+    background-color: #f0f7ff;
 }
 </style>
 
