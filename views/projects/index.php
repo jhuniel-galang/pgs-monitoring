@@ -61,10 +61,11 @@
                         Completed: <?php echo $summary['completed_projects']; ?> | 
                         Planning: <?php echo $summary['planning_projects']; ?>
                     </p>
-                    <div class="progress bg-light" style="height: 5px;">
-                        <div class="progress-bar bg-white" style="width: <?php echo $summary['avg_progress'] ?? 0; ?>%"></div>
-                    </div>
-                    <small>Avg Progress: <?php echo round($summary['avg_progress'] ?? 0, 1); ?>%</small>
+<div class="progress bg-light" style="height: 5px;">
+    <div class="progress-bar bg-white" style="width: <?php echo round($summary['avg_progress'] ?? 0); ?>%"></div>
+</div>
+<small>Avg Progress: <?php echo round($summary['avg_progress'] ?? 0, 1); ?>%</small>
+
                 </div>
             </div>
         </div>
@@ -186,7 +187,7 @@
                 <tbody>
                     <?php if(empty($projects)): ?>
                     <tr>
-                        <td colspan="8" class="text-center">No Core area found matching your filters.</td>
+                        <td colspan="8" class="text-center">No Core Area found matching your filters.</td>
                     </tr>
                     <?php else: ?>
                         <?php foreach($projects as $project): ?>
@@ -237,20 +238,23 @@
                                     <?php echo ucfirst($priority); ?>
                                 </span>
                             </td>
-                            <td style="min-width: 120px;">
-                                <div class="progress" style="height: 20px;">
-                                    <?php $progress = $project['progress_percentage'] ?? 0; ?>
-                                    <div class="progress-bar bg-<?php 
-                                        echo $progress >= 100 ? 'success' : 
-                                            ($progress >= 50 ? 'info' : 'warning'); 
-                                    ?>" style="width: <?php echo $progress; ?>%">
-                                        <?php echo $progress; ?>%
-                                    </div>
-                                </div>
-                                <small class="text-muted">
-                                    Tasks: <?php echo $project['completed_tasks'] ?? 0; ?>/<?php echo $project['total_tasks'] ?? 0; ?>
-                                </small>
-                            </td>
+<td style="min-width: 120px;">
+    <div class="progress" style="height: 20px;">
+        <?php 
+        // Use avg_progress from the query result
+        $progress = round($project['avg_progress'] ?? 0); 
+        ?>
+        <div class="progress-bar bg-<?php 
+            echo $progress >= 100 ? 'success' : 
+                ($progress >= 50 ? 'info' : 'warning'); 
+        ?>" style="width: <?php echo $progress; ?>%">
+            <?php echo $progress; ?>%
+        </div>
+    </div>
+    <small class="text-muted">
+        Tasks: <?php echo $project['completed_tasks'] ?? 0; ?>/<?php echo $project['total_tasks'] ?? 0; ?>
+    </small>
+</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="index.php?action=view_project&id=<?php echo $project['project_id']; ?>" class="btn btn-sm btn-info">

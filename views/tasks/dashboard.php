@@ -102,17 +102,19 @@
                                             <small class="text-muted d-block">Year</small>
                                             <span class="badge bg-dark"><?php echo htmlspecialchars($project['year'] ?? 'N/A'); ?></span>
                                         </div>
-                                        <div class="mb-2">
-                                            <small class="text-muted d-block">Progress</small>
-                                            <div class="progress" style="height: 8px;">
-                                                <div class="progress-bar bg-<?php 
-                                                    echo $project['progress_percentage'] >= 100 ? 'success' : 
-                                                        ($project['progress_percentage'] >= 50 ? 'info' : 'warning'); 
-                                                ?>" style="width: <?php echo $project['progress_percentage']; ?>%">
-                                                </div>
-                                            </div>
-                                            <small class="fw-bold"><?php echo $project['progress_percentage']; ?>%</small>
-                                        </div>
+<div class="mb-2">
+    <small class="text-muted d-block">Progress</small>
+    <div class="progress" style="height: 8px;">
+        <?php 
+        $progress = round($project['avg_progress'] ?? 0);
+        $progress_color = $progress >= 100 ? 'success' : ($progress >= 50 ? 'info' : 'warning');
+        ?>
+        <div class="progress-bar bg-<?php echo $progress_color; ?>" 
+             style="width: <?php echo $progress; ?>%">
+        </div>
+    </div>
+    <small class="fw-bold"><?php echo $progress; ?>%</small>
+</div>
                                         <div class="mb-2">
                                             <small class="text-muted d-block">Commitments</small>
                                             <strong><?php echo $project['completed_tasks'] ?? 0; ?>/<?php echo $project['total_tasks'] ?? 0; ?></strong>
@@ -216,15 +218,18 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="mb-1">
-                                                    <small class="text-muted d-block">Progress</small>
-                                                    <div class="progress" style="height: 5px;">
-                                                        <div class="progress-bar bg-<?php echo $statusColor; ?>" 
-                                                             style="width: <?php echo $percentage; ?>%">
-                                                        </div>
-                                                    </div>
-                                                    <small class="fw-bold"><?php echo $percentage; ?>%</small>
-                                                </div>
+                                                <div class="mb-2">
+    <small class="text-muted d-block">Progress</small>
+    <div class="progress" style="height: 8px;">
+        <div class="progress-bar bg-<?php 
+            // Calculate progress from avg_progress or tasks
+            $progress = isset($project['avg_progress']) ? round($project['avg_progress']) : 0;
+            echo $progress >= 100 ? 'success' : ($progress >= 50 ? 'info' : 'warning'); 
+        ?>" style="width: <?php echo $progress; ?>%">
+        </div>
+    </div>
+    <small class="fw-bold"><?php echo $progress; ?>%</small>
+</div>
                                                 
                                                 <div class="mb-1">
                                                     <small class="text-muted d-block">Target</small>

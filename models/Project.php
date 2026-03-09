@@ -12,14 +12,24 @@ class Project extends DatabaseModel {
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    // READ - Get all projects with filters (UPDATED with year filter)
 public function getAllProjects($filters = [], $limit = 10, $offset = 0) {
     $query = "SELECT p.*, 
               COUNT(DISTINCT pu.unit_id) as total_units,
               COUNT(DISTINCT t.task_id) as total_tasks,
-              (SELECT COUNT(*) FROM tbl_task WHERE project_id = p.project_id AND 
-                (SELECT percentage FROM tbl_status WHERE task_id = tbl_task.task_id ORDER BY created_at DESC LIMIT 1) >= 100) as completed_tasks,
-              COALESCE(p.progress_percentage, 0) as progress_percentage
+              COUNT(DISTINCT CASE 
+                  WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) >= 100 
+                  THEN t.task_id 
+              END) as completed_tasks,
+              COALESCE(
+                  ROUND(
+                      AVG(
+                          COALESCE(
+                              (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1),
+                              0
+                          )
+                      ), 2
+                  ), 0
+              ) as avg_progress
               FROM " . $this->table . " p
               LEFT JOIN tbl_project_units pu ON p.project_id = pu.project_id
               LEFT JOIN tbl_task t ON p.project_id = t.project_id
@@ -72,71 +82,38 @@ public function getAllProjects($filters = [], $limit = 10, $offset = 0) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-    public function getTotalProjectCount($filters = []) {
-    $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE 1=1";
-    
-    $params = [];
-    
-    if(!empty($filters['search'])) {
-        $query .= " AND (project_name LIKE :search OR project_description LIKE :search)";
-        $params[':search'] = '%' . $filters['search'] . '%';
-    }
-    
-    if(!empty($filters['division'])) {
-        $query .= " AND functional_division = :division";
-        $params[':division'] = $filters['division'];
-    }
-    
-    if(!empty($filters['status'])) {
-        $query .= " AND status = :status";
-        $params[':status'] = $filters['status'];
-    }
-    
-    if(!empty($filters['priority'])) {
-        $query .= " AND priority = :priority";
-        $params[':priority'] = $filters['priority'];
-    }
-    
-    if(!empty($filters['year'])) {
-        $query .= " AND year = :year";
-        $params[':year'] = $filters['year'];
-    }
+ // In Project.php - Update the getProjectById method
+public function getProjectById($project_id) {
+    $query = "SELECT p.*, 
+              GROUP_CONCAT(DISTINCT u.id) as unit_ids,
+              GROUP_CONCAT(DISTINCT u.unit_name SEPARATOR '||') as unit_names,
+              COUNT(DISTINCT t.task_id) as total_tasks,
+              COUNT(DISTINCT CASE 
+                  WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) >= 100 
+                  THEN t.task_id 
+              END) as completed_tasks,
+              COALESCE(
+                  ROUND(
+                      AVG(
+                          COALESCE(
+                              (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1),
+                              0
+                          )
+                      ), 2
+                  ), 0
+              ) as avg_progress
+              FROM " . $this->table . " p
+              LEFT JOIN tbl_project_units pu ON p.project_id = pu.project_id
+              LEFT JOIN tbl_units u ON pu.unit_id = u.id
+              LEFT JOIN tbl_task t ON p.project_id = t.project_id
+              WHERE p.project_id = :project_id
+              GROUP BY p.project_id";
     
     $stmt = $this->getConnection()->prepare($query);
-    
-    foreach($params as $key => &$val) {
-        $stmt->bindParam($key, $val);
-    }
-    
+    $stmt->bindParam(':project_id', $project_id);
     $stmt->execute();
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $result['total'];
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
-
-    // READ - Get single project by ID (UPDATED to include year)
-    public function getProjectById($project_id) {
-        $query = "SELECT p.*, 
-                  GROUP_CONCAT(DISTINCT u.id) as unit_ids,
-                  GROUP_CONCAT(DISTINCT u.unit_name SEPARATOR '||') as unit_names,
-                  COUNT(DISTINCT t.task_id) as total_tasks,
-                  SUM(CASE WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) >= 100 THEN 1 ELSE 0 END) as completed_tasks,
-                  ROUND(AVG(CASE 
-                      WHEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1) IS NOT NULL 
-                      THEN (SELECT percentage FROM tbl_status WHERE task_id = t.task_id ORDER BY created_at DESC LIMIT 1)
-                      ELSE 0 
-                  END), 2) as avg_progress
-                  FROM " . $this->table . " p
-                  LEFT JOIN tbl_project_units pu ON p.project_id = pu.project_id
-                  LEFT JOIN tbl_units u ON pu.unit_id = u.id
-                  LEFT JOIN tbl_task t ON p.project_id = t.project_id
-                  WHERE p.project_id = :project_id
-                  GROUP BY p.project_id";
-        
-        $stmt = $this->getConnection()->prepare($query);
-        $stmt->bindParam(':project_id', $project_id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
     // CREATE - Add new project (UPDATED to properly handle year)
 // CREATE - Add new project (UPDATED to properly handle year)
@@ -400,6 +377,57 @@ public function updateProject($project_id, $data, $unit_ids = []) {
     $stmt = $this->getConnection()->prepare($query);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+public function getTotalProjectCount($filters = []) {
+    $query = "SELECT COUNT(DISTINCT p.project_id) as total FROM " . $this->table . " p";
+    
+    $params = [];
+    $whereConditions = [];
+    
+    // Start building WHERE clause
+    $query .= " WHERE 1=1";
+    
+    // Apply filters
+    if(!empty($filters['search'])) {
+        $whereConditions[] = " (p.project_name LIKE :search OR p.project_description LIKE :search)";
+        $params[':search'] = '%' . $filters['search'] . '%';
+    }
+    
+    if(!empty($filters['division'])) {
+        $whereConditions[] = " p.functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['status'])) {
+        $whereConditions[] = " p.status = :status";
+        $params[':status'] = $filters['status'];
+    }
+    
+    if(!empty($filters['priority'])) {
+        $whereConditions[] = " p.priority = :priority";
+        $params[':priority'] = $filters['priority'];
+    }
+    
+    if(!empty($filters['year'])) {
+        $whereConditions[] = " p.year = :year";
+        $params[':year'] = $filters['year'];
+    }
+    
+    // Add all WHERE conditions
+    foreach($whereConditions as $condition) {
+        $query .= " AND" . $condition;
+    }
+    
+    $stmt = $this->getConnection()->prepare($query);
+    
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'] ?? 0;
 }
 }
 ?>

@@ -265,11 +265,17 @@ class TaskController {
             $total_tasks = 0;
             $total_completed_tasks = 0;
             $total_progress = 0;
+            $projects_with_progress = 0;
             
             foreach($division_projects as $project) {
                 $total_tasks += $project['total_tasks'] ?? 0;
                 $total_completed_tasks += $project['completed_tasks'] ?? 0;
-                $total_progress += $project['progress_percentage'] ?? 0;
+                // Use avg_progress if available, otherwise use progress_percentage
+                $project_progress = $project['avg_progress'] ?? $project['progress_percentage'] ?? 0;
+                $total_progress += $project_progress;
+                if ($project_progress > 0) {
+                    $projects_with_progress++;
+                }
             }
             
             $division_summary[] = [
@@ -277,7 +283,7 @@ class TaskController {
                 'total_projects' => $total_projects,
                 'total_tasks' => $total_tasks,
                 'completed_tasks' => $total_completed_tasks,
-                'average_progress' => $total_projects > 0 ? round($total_progress / $total_projects, 2) : 0
+                'avg_progress' => $total_projects > 0 ? round($total_progress / $total_projects, 2) : 0
             ];
         }
         
@@ -308,11 +314,17 @@ class TaskController {
         $total_tasks = 0;
         $total_completed_tasks = 0;
         $total_progress = 0;
+        $projects_with_progress = 0;
         
         foreach($projects as $project) {
             $total_tasks += $project['total_tasks'] ?? 0;
             $total_completed_tasks += $project['completed_tasks'] ?? 0;
-            $total_progress += $project['progress_percentage'] ?? 0;
+            // Use avg_progress if available, otherwise use progress_percentage
+            $project_progress = $project['avg_progress'] ?? $project['progress_percentage'] ?? 0;
+            $total_progress += $project_progress;
+            if ($project_progress > 0) {
+                $projects_with_progress++;
+            }
         }
         
         $division_summary = [[
@@ -320,7 +332,7 @@ class TaskController {
             'total_projects' => $total_projects,
             'total_tasks' => $total_tasks,
             'completed_tasks' => $total_completed_tasks,
-            'average_progress' => $total_projects > 0 ? round($total_progress / $total_projects, 2) : 0
+            'avg_progress' => $total_projects > 0 ? round($total_progress / $total_projects, 2) : 0
         ]];
         
         // Get ALL tasks for encoder (only their division) with year filter
@@ -336,6 +348,30 @@ class TaskController {
         // Get recent tasks for encoder (only their division) - filtered by year
         $recent_tasks = $all_tasks;
         $recent_tasks = array_slice($recent_tasks, 0, 5);
+    }
+    
+    // Now, calculate average progress for each project from its tasks
+    foreach ($projects as &$project) {
+        // Get tasks for this project
+        $project_tasks = array_filter($all_tasks ?? [], function($task) use ($project) {
+            return ($task['project_id'] ?? 0) == $project['project_id'];
+        });
+        
+        $total_percentage = 0;
+        $task_count = count($project_tasks);
+        
+        if ($task_count > 0) {
+            foreach($project_tasks as $task) {
+                $total_percentage += $task['current_percentage'] ?? 0;
+            }
+            $project['avg_progress'] = round($total_percentage / $task_count, 2);
+        } else {
+            $project['avg_progress'] = 0;
+        }
+        
+        // Also ensure completed_tasks and total_tasks are set
+        $project['completed_tasks'] = $project['completed_tasks'] ?? 0;
+        $project['total_tasks'] = $project['total_tasks'] ?? 0;
     }
     
     // Count filtered projects and tasks

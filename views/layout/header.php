@@ -166,6 +166,9 @@
                         <a class="nav-link" href="index.php?action=dashboard">Dashboard</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="index.php?action=projects">Core Area</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="index.php?action=tasks">Commitments</a>
                     </li>
                     <?php if($_SESSION['role'] == 'admin'): ?>
@@ -176,9 +179,7 @@
                         <a class="nav-link" href="index.php?action=units">Units</a>
                     </li>
                     <?php endif; ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php?action=projects">Core Area</a>
-                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="index.php?action=profile">Profile</a>
                     </li>
