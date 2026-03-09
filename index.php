@@ -54,7 +54,7 @@ switch($action) {
     $filtered_project_count = count($projects);
     $filtered_task_count = count($all_tasks);
     
-    // Store error if any from authentication
+    // Get error from URL if exists
     $error = isset($_GET['error']) ? $_GET['error'] : '';
     
     require_once 'views/auth/login.php';

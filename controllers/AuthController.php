@@ -11,7 +11,8 @@ class AuthController {
     public function login($username, $password) {
         // Basic validation
         if(empty($username) || empty($password)) {
-            return "Username and password are required";
+            header("Location: index.php?action=login&error=" . urlencode("Username and password are required"));
+            exit();
         }
 
         $user = $this->user->login($username, $password);
@@ -40,7 +41,9 @@ class AuthController {
             header("Location: index.php?action=dashboard");
             exit();
         } else {
-            return "Invalid username or password";
+            // Redirect back to login with error message
+            header("Location: index.php?action=login&error=" . urlencode("Invalid username or password"));
+            exit();
         }
     }
 

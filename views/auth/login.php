@@ -408,6 +408,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loginModal.show();
 });
 <?php endif; ?>
+
+
+// Show login modal if there's an error
+<?php if(isset($error) && !empty($error)): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+    loginModal.show();
+});
+<?php endif; ?>
 </script>
 
 <?php require_once 'views/layout/footer.php'; ?>
