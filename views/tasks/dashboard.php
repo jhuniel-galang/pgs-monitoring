@@ -1,40 +1,5 @@
 <?php require_once 'views/layout/header.php'; ?>
 
-<!-- Music Player Control -->
-<div class="row mb-3">
-    <div class="col-md-12">
-        <div class="card bg-light border-0 shadow-sm">
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-music-note-beamed text-primary me-2" style="font-size: 1.2rem;"></i>
-                        <span class="fw-semibold me-3">Background Music</span>
-                        <span class="badge bg-primary bg-opacity-10 text-primary me-3" id="music-status">Playing</span>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary" id="playPauseBtn" onclick="togglePlayPause()">
-                            <i class="bi bi-pause-fill" id="playPauseIcon"></i> <span id="playPauseText">Pause</span>
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" id="muteBtn" onclick="toggleMute()">
-                            <i class="bi bi-volume-up-fill" id="muteIcon"></i> <span id="muteText">Mute</span>
-                        </button>
-                        <div class="d-flex align-items-center ms-2">
-                            <i class="bi bi-volume-down me-1"></i>
-                            <input type="range" class="form-range" id="volumeSlider" min="0" max="100" value="50" style="width: 100px;" onchange="changeVolume(this.value)">
-                            <i class="bi bi-volume-up ms-1"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Hidden Audio Element -->
-<audio id="backgroundMusic" loop style="display: none;">
-    <source src="assets/music/step up final m ix one (1).mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
-</audio>
 
 <!-- Projects Carousel -->
 <?php if(isset($projects) && !empty($projects)): ?>
@@ -411,6 +376,44 @@
     </div>
 </div>
 
+<!-- Music Player Control -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card bg-light border-0 shadow-sm">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-music-note-beamed text-primary me-2" style="font-size: 1.2rem;"></i>
+                        <span class="fw-semibold me-3">Background Music</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-3" id="music-status">Paused</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="playPauseBtn" onclick="togglePlayPause()">
+                            <i class="bi bi-play-fill" id="playPauseIcon"></i> <span id="playPauseText">Play</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="muteBtn" onclick="toggleMute()">
+                            <i class="bi bi-volume-up-fill" id="muteIcon"></i> <span id="muteText">Mute</span>
+                        </button>
+                        <div class="d-flex align-items-center ms-2">
+                            <i class="bi bi-volume-down me-1"></i>
+                            <input type="range" class="form-range" id="volumeSlider" min="0" max="100" value="50" style="width: 100px;" onchange="changeVolume(this.value)" oninput="updateVolumePreview(this.value)">
+                            <i class="bi bi-volume-up ms-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Audio Element -->
+<audio id="backgroundMusic" loop preload="auto" style="display: none;">
+    <source src="assets/music/stepup.mp3" type="audio/mpeg">
+    <source src="assets/music/step up final m ix one (1).ogg" type="audio/ogg">
+    <source src="assets/music/step up final m ix one (1).wav" type="audio/wav">
+    Your browser does not support the audio element.
+</audio>
+
 <style>
 .project-carousel {
     position: relative;
@@ -524,41 +527,125 @@
 <script>
 // Music player controls
 let audio = document.getElementById('backgroundMusic');
-let isPlaying = true;
+let isPlaying = false;
 let isMuted = false;
+let userActivated = false;  // becomes true after first interaction
 
 // Initialize audio
 document.addEventListener('DOMContentLoaded', function() {
+    if (!audio) {
+        console.error('Audio element not found!');
+        return;
+    }
+
     // Set initial volume to 50%
     audio.volume = 0.5;
-    
-    // Try to play audio (may be blocked by browser autoplay policies)
-    audio.play().catch(function(error) {
-        console.log("Autoplay was prevented. User needs to interact with the page first.");
-        // Update UI to show paused state
+    audio.loop = true;
+
+    // Load saved preferences
+    const savedVolume = localStorage.getItem('musicVolume');
+    const savedMuted = localStorage.getItem('musicMuted');
+
+    if (savedVolume !== null) {
+        audio.volume = savedVolume / 100;
+        document.getElementById('volumeSlider').value = savedVolume;
+    }
+
+    if (savedMuted === 'true') {
+        audio.muted = true;
+        isMuted = true;
+        document.getElementById('muteIcon').className = 'bi bi-volume-mute-fill';
+        document.getElementById('muteText').textContent = 'Unmute';
+    }
+
+    // Show hint that interaction is needed
+    document.getElementById('music-status').textContent = 'Move mouse or click to play';
+    document.getElementById('music-status').className = 'badge bg-warning bg-opacity-10 text-warning me-3';
+
+    // Wait for first user interaction to start playback
+    const startOnInteraction = () => {
+        if (!userActivated) {
+            userActivated = true;
+            audio.play()
+                .then(() => {
+                    isPlaying = true;
+                    updatePlayPauseUI();
+                    console.log('Playback started after user interaction');
+                })
+                .catch(e => console.error('Playback failed:', e));
+        }
+        // Remove all interaction listeners after first activation
+        document.removeEventListener('mousemove', startOnInteraction);
+        document.removeEventListener('click', startOnInteraction);
+        document.removeEventListener('keydown', startOnInteraction);
+        document.removeEventListener('touchstart', startOnInteraction);
+    };
+
+    document.addEventListener('mousemove', startOnInteraction, { once: true });
+    document.addEventListener('click', startOnInteraction, { once: true });
+    document.addEventListener('keydown', startOnInteraction, { once: true });
+    document.addEventListener('touchstart', startOnInteraction, { once: true });
+
+    // Audio event listeners
+    audio.addEventListener('play', () => {
+        isPlaying = true;
+        updatePlayPauseUI();
+    });
+
+    audio.addEventListener('pause', () => {
         isPlaying = false;
-        document.getElementById('playPauseIcon').className = 'bi bi-play-fill';
-        document.getElementById('playPauseText').textContent = 'Play';
-        document.getElementById('music-status').textContent = 'Paused';
-        document.getElementById('music-status').className = 'badge bg-secondary bg-opacity-10 text-secondary me-3';
+        updatePlayPauseUI();
+    });
+
+    audio.addEventListener('volumechange', () => {
+        if (audio.volume === 0 && !audio.muted) {
+            audio.muted = true;
+        }
+    });
+
+    audio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        document.getElementById('music-status').textContent = 'Error';
+        document.getElementById('music-status').className = 'badge bg-danger bg-opacity-10 text-danger me-3';
     });
 });
+
+function updatePlayPauseUI() {
+    const playPauseIcon = document.getElementById('playPauseIcon');
+    const playPauseText = document.getElementById('playPauseText');
+    const musicStatus = document.getElementById('music-status');
+
+    if (isPlaying) {
+        playPauseIcon.className = 'bi bi-pause-fill';
+        playPauseText.textContent = 'Pause';
+        musicStatus.textContent = 'Playing';
+        musicStatus.className = 'badge bg-primary bg-opacity-10 text-primary me-3';
+    } else {
+        playPauseIcon.className = 'bi bi-play-fill';
+        playPauseText.textContent = 'Play';
+        musicStatus.textContent = 'Paused';
+        musicStatus.className = 'badge bg-secondary bg-opacity-10 text-secondary me-3';
+    }
+
+    localStorage.setItem('musicPlaying', isPlaying);
+}
 
 function togglePlayPause() {
     if (isPlaying) {
         audio.pause();
-        document.getElementById('playPauseIcon').className = 'bi bi-play-fill';
-        document.getElementById('playPauseText').textContent = 'Play';
-        document.getElementById('music-status').textContent = 'Paused';
-        document.getElementById('music-status').className = 'badge bg-secondary bg-opacity-10 text-secondary me-3';
+        // isPlaying will be updated by the 'pause' event listener
     } else {
-        audio.play();
-        document.getElementById('playPauseIcon').className = 'bi bi-pause-fill';
-        document.getElementById('playPauseText').textContent = 'Pause';
-        document.getElementById('music-status').textContent = 'Playing';
-        document.getElementById('music-status').className = 'badge bg-primary bg-opacity-10 text-primary me-3';
+        audio.play()
+            .then(() => {
+                // isPlaying will be updated by the 'play' event listener
+            })
+            .catch(error => {
+                console.log('Play failed:', error);
+                // If still blocked (rare), show hint again
+                document.getElementById('music-status').textContent = 'Click to enable music';
+                document.getElementById('music-status').className = 'badge bg-warning bg-opacity-10 text-warning me-3';
+            });
     }
-    isPlaying = !isPlaying;
 }
 
 function toggleMute() {
@@ -572,7 +659,71 @@ function toggleMute() {
         document.getElementById('muteText').textContent = 'Unmute';
     }
     isMuted = !isMuted;
+    localStorage.setItem('musicMuted', isMuted);
 }
+
+function changeVolume(value) {
+    const volume = value / 100;
+    audio.volume = volume;
+
+    // Update mute state based on volume
+    if (value == 0 && !isMuted) {
+        audio.muted = true;
+        document.getElementById('muteIcon').className = 'bi bi-volume-mute-fill';
+        document.getElementById('muteText').textContent = 'Unmute';
+        isMuted = true;
+        localStorage.setItem('musicMuted', true);
+    } else if (value > 0 && isMuted) {
+        audio.muted = false;
+        document.getElementById('muteIcon').className = 'bi bi-volume-up-fill';
+        document.getElementById('muteText').textContent = 'Mute';
+        isMuted = false;
+        localStorage.setItem('musicMuted', false);
+    }
+
+    localStorage.setItem('musicVolume', value);
+}
+
+function updateVolumePreview(value) {
+    const muteIcon = document.getElementById('muteIcon');
+    if (value == 0) {
+        muteIcon.className = 'bi bi-volume-off-fill';
+    } else if (value < 30) {
+        muteIcon.className = 'bi bi-volume-down-fill';
+    } else {
+        muteIcon.className = 'bi bi-volume-up-fill';
+    }
+}
+
+// Add error handling for audio
+audio.addEventListener('error', function(e) {
+    console.error('Audio error:', e);
+    document.getElementById('music-status').textContent = 'Error';
+    document.getElementById('music-status').className = 'badge bg-danger bg-opacity-10 text-danger me-3';
+});
+
+// When audio can play, update status if playing
+audio.addEventListener('canplay', function() {
+    if (isPlaying) {
+        document.getElementById('music-status').textContent = 'Playing';
+    }
+});
+
+// Handle when audio is paused by browser (e.g., when another audio starts)
+audio.addEventListener('pause', function() {
+    if (isPlaying) {
+        isPlaying = false;
+        updatePlayPauseUI();
+    }
+});
+
+// Handle when audio plays
+audio.addEventListener('play', function() {
+    if (!isPlaying) {
+        isPlaying = true;
+        updatePlayPauseUI();
+    }
+});
 
 function changeVolume(value) {
     audio.volume = value / 100;

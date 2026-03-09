@@ -148,7 +148,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="index.php?action=login">
+            <a class="navbar-brand">
                 <img src="assets/images/5.jpeg" alt="SDO Logo">
                 <div class="brand-text">
                     <span class="top">SCHOOLS DIVISION OFFICE</span>

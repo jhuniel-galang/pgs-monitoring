@@ -5,6 +5,8 @@
 echo '<div class="public-view">';
 ?>
 
+
+
 <!-- Projects Carousel - Public View (Read Only) -->
 <?php if(isset($projects) && !empty($projects)): ?>
 <div class="row mb-4">
@@ -257,11 +259,221 @@ echo '<div class="public-view">';
 </div>
 <?php endif; ?>
 
-
-
 </div> <!-- end public-view -->
 
+
+
+<!-- Music Player Control - Added for public view -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card bg-light border-0 shadow-sm">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-music-note-beamed text-primary me-2" style="font-size: 1.2rem;"></i>
+                        <span class="fw-semibold me-3">Background Music</span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning me-3" id="music-status">Move mouse or click to play</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="playPauseBtn" onclick="togglePlayPause()">
+                            <i class="bi bi-play-fill" id="playPauseIcon"></i> <span id="playPauseText">Play</span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="muteBtn" onclick="toggleMute()">
+                            <i class="bi bi-volume-up-fill" id="muteIcon"></i> <span id="muteText">Mute</span>
+                        </button>
+                        <div class="d-flex align-items-center ms-2">
+                            <i class="bi bi-volume-down me-1"></i>
+                            <input type="range" class="form-range" id="volumeSlider" min="0" max="100" value="50" style="width: 100px;" onchange="changeVolume(this.value)" oninput="updateVolumePreview(this.value)">
+                            <i class="bi bi-volume-up ms-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Audio Element -->
+<audio id="backgroundMusic" loop preload="auto" style="display: none;">
+    <source src="assets/music/stepup.mp3" type="audio/mpeg">
+    <source src="assets/music/step up final m ix one (1).ogg" type="audio/ogg">
+    <source src="assets/music/step up final m ix one (1).wav" type="audio/wav">
+    Your browser does not support the audio element.
+</audio>
+
+
 <script>
+// Music player controls
+let audio = document.getElementById('backgroundMusic');
+let isPlaying = false;
+let isMuted = false;
+
+// Initialize audio
+document.addEventListener('DOMContentLoaded', function() {
+    if (!audio) {
+        console.error('Audio element not found!');
+        return;
+    }
+
+    // Set initial volume to 50%
+    audio.volume = 0.5;
+    audio.loop = true;
+
+    // Load saved preferences
+    const savedVolume = localStorage.getItem('musicVolume');
+    const savedMuted = localStorage.getItem('musicMuted');
+
+    if (savedVolume !== null) {
+        audio.volume = savedVolume / 100;
+        document.getElementById('volumeSlider').value = savedVolume;
+    }
+
+    if (savedMuted === 'true') {
+        audio.muted = true;
+        isMuted = true;
+        document.getElementById('muteIcon').className = 'bi bi-volume-mute-fill';
+        document.getElementById('muteText').textContent = 'Unmute';
+    }
+
+    // Try to play unmuted immediately (will likely be blocked)
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                // Success! (rare on first visit, but possible if browser allows)
+                isPlaying = true;
+                updatePlayPauseUI();
+                console.log('Autoplay succeeded');
+            })
+            .catch(error => {
+                console.log('Autoplay blocked. Waiting for user interaction.', error);
+                // Update hint to encourage click
+                document.getElementById('music-status').textContent = 'Click anywhere to play music';
+                document.getElementById('music-status').className = 'badge bg-warning bg-opacity-10 text-warning me-3';
+            });
+    }
+
+    // Set up one-time interaction listener to start playback
+    const startOnInteraction = function() {
+        if (isPlaying) return; // already playing
+        audio.play()
+            .then(() => {
+                isPlaying = true;
+                updatePlayPauseUI();
+                console.log('Playback started after interaction');
+            })
+            .catch(e => {
+                console.log('Play failed on interaction:', e);
+                // Keep listener for next click? Usually not needed.
+            });
+        // Remove listeners after first interaction
+        document.removeEventListener('click', startOnInteraction);
+        document.removeEventListener('keydown', startOnInteraction);
+        document.removeEventListener('touchstart', startOnInteraction);
+    };
+
+    document.addEventListener('click', startOnInteraction);
+    document.addEventListener('keydown', startOnInteraction);
+    document.addEventListener('touchstart', startOnInteraction);
+
+    // Audio event listeners
+    audio.addEventListener('play', () => {
+        isPlaying = true;
+        updatePlayPauseUI();
+    });
+
+    audio.addEventListener('pause', () => {
+        isPlaying = false;
+        updatePlayPauseUI();
+    });
+
+    audio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        document.getElementById('music-status').textContent = 'Error loading audio';
+        document.getElementById('music-status').className = 'badge bg-danger bg-opacity-10 text-danger me-3';
+    });
+});
+
+function updatePlayPauseUI() {
+    const playPauseIcon = document.getElementById('playPauseIcon');
+    const playPauseText = document.getElementById('playPauseText');
+    const musicStatus = document.getElementById('music-status');
+
+    if (isPlaying) {
+        playPauseIcon.className = 'bi bi-pause-fill';
+        playPauseText.textContent = 'Pause';
+        musicStatus.textContent = 'Playing';
+        musicStatus.className = 'badge bg-primary bg-opacity-10 text-primary me-3';
+    } else {
+        playPauseIcon.className = 'bi bi-play-fill';
+        playPauseText.textContent = 'Play';
+        musicStatus.textContent = 'Paused';
+        musicStatus.className = 'badge bg-secondary bg-opacity-10 text-secondary me-3';
+    }
+
+    localStorage.setItem('musicPlaying', isPlaying);
+}
+
+function togglePlayPause() {
+    if (isPlaying) {
+        audio.pause();
+    } else {
+        audio.play()
+            .then(() => {})
+            .catch(error => {
+                console.log('Play failed:', error);
+                document.getElementById('music-status').textContent = 'Click to enable music';
+                document.getElementById('music-status').className = 'badge bg-warning bg-opacity-10 text-warning me-3';
+            });
+    }
+}
+
+function toggleMute() {
+    if (isMuted) {
+        audio.muted = false;
+        document.getElementById('muteIcon').className = 'bi bi-volume-up-fill';
+        document.getElementById('muteText').textContent = 'Mute';
+    } else {
+        audio.muted = true;
+        document.getElementById('muteIcon').className = 'bi bi-volume-mute-fill';
+        document.getElementById('muteText').textContent = 'Unmute';
+    }
+    isMuted = !isMuted;
+    localStorage.setItem('musicMuted', isMuted);
+}
+
+function changeVolume(value) {
+    const volume = value / 100;
+    audio.volume = volume;
+
+    if (value == 0 && !isMuted) {
+        audio.muted = true;
+        isMuted = true;
+        document.getElementById('muteIcon').className = 'bi bi-volume-mute-fill';
+        document.getElementById('muteText').textContent = 'Unmute';
+        localStorage.setItem('musicMuted', true);
+    } else if (value > 0 && isMuted) {
+        audio.muted = false;
+        isMuted = false;
+        document.getElementById('muteIcon').className = 'bi bi-volume-up-fill';
+        document.getElementById('muteText').textContent = 'Mute';
+        localStorage.setItem('musicMuted', false);
+    }
+
+    localStorage.setItem('musicVolume', value);
+}
+
+function updateVolumePreview(value) {
+    const muteIcon = document.getElementById('muteIcon');
+    if (value == 0) {
+        muteIcon.className = 'bi bi-volume-off-fill';
+    } else if (value < 30) {
+        muteIcon.className = 'bi bi-volume-down-fill';
+    } else {
+        muteIcon.className = 'bi bi-volume-up-fill';
+    }
+}
+// Carousel variables and functions
 let currentSlide = '0';
 let autoPlayInterval;
 let slideOrder = [];
@@ -408,7 +620,6 @@ document.addEventListener('DOMContentLoaded', function() {
     loginModal.show();
 });
 <?php endif; ?>
-
 
 // Show login modal if there's an error
 <?php if(isset($error) && !empty($error)): ?>
