@@ -74,7 +74,7 @@
         
         .report-filters {
             margin: 15px 0;
-            padding: 10px;
+            padding: 15px;
             background-color: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -83,24 +83,83 @@
         .filter-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 20px;
+            align-items: flex-end;
         }
         
         .filter-item {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            min-width: 150px;
         }
         
-        .filter-item strong {
-            margin-right: 5px;
+        .filter-item label {
+            font-weight: bold;
             color: #555;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .filter-item select, .filter-item input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            background-color: white;
         }
         
         .filter-item span {
-            padding: 3px 8px;
+            padding: 8px;
             background-color: white;
             border: 1px solid #ccc;
-            border-radius: 3px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
         }
         
         .core-area-section {
@@ -153,15 +212,14 @@
         
         /* Column widths */
         .col-id { width: 3%; }
-        .col-core-area { width: 12%; }
         .col-commitment { width: 20%; }
         .col-unit { width: 10%; }
-        .col-target { width: 6%; }
-        .col-progress { width: 5%; }
-        .col-status { width: 5%; }
+        .col-target { width: 8%; }
+        .col-progress { width: 6%; }
+        .col-status { width: 6%; }
         .col-priority { width: 5%; }
-        .col-last-update { width: 6%; }
-        .col-remarks { width: 28%; }
+        .col-last-update { width: 8%; }
+        .col-remarks { width: 34%; }
         
         .commitment-details {
             font-weight: bold;
@@ -344,13 +402,47 @@
             font-weight: bold;
         }
         
+        .division-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+        
+        .division-osds {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .division-cid {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .division-sgod {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .division-schools {
+            background-color: #6c757d;
+            color: white;
+        }
+        
         @media print {
-            .print-button {
+            .print-button, .filter-actions, .btn {
                 display: none;
             }
             
             body {
                 padding: 10px;
+            }
+            
+            .report-filters {
+                background-color: white;
+                border: 1px solid #ddd;
             }
             
             .core-area-header {
@@ -415,6 +507,34 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+            
+            .division-osds {
+                background-color: #007bff !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .division-cid {
+                background-color: #28a745 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .division-sgod {
+                background-color: #17a2b8 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .division-schools {
+                background-color: #6c757d !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
     <!-- Bootstrap Icons (optional) -->
@@ -440,51 +560,82 @@
             </div>
         </div>
         
-        <!-- Report Filters -->
+        <!-- Report Filters with Division Selector -->
         <div class="report-filters">
-            <div class="filter-grid">
-                <div class="filter-item">
-                    <strong>Year:</strong>
-                    <span><?php echo !empty($selected_year) ? htmlspecialchars($selected_year) : 'All Years'; ?></span>
-                </div>
+            <form method="GET" action="index.php" id="reportForm">
+                <input type="hidden" name="action" value="task_report">
                 
-                <div class="filter-item">
-                    <strong>As of:</strong>
-                    <span><?php echo $current_date; ?></span>
+                <div class="filter-grid">
+                    <div class="filter-item">
+                        <label for="year">Year:</label>
+                        <input type="text" id="year" name="year" placeholder="e.g., 2024" 
+                               value="<?php echo htmlspecialchars($_GET['year'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="division">Functional Division:</label>
+                        <select id="division" name="division">
+                            <option value="">All Divisions</option>
+                            <option value="OSDS" <?php echo (isset($_GET['division']) && $_GET['division'] == 'OSDS') ? 'selected' : ''; ?>>OSDS</option>
+                            <option value="CID" <?php echo (isset($_GET['division']) && $_GET['division'] == 'CID') ? 'selected' : ''; ?>>CID</option>
+                            <option value="SGOD" <?php echo (isset($_GET['division']) && $_GET['division'] == 'SGOD') ? 'selected' : ''; ?>>SGOD</option>
+                            <option value="Schools" <?php echo (isset($_GET['division']) && $_GET['division'] == 'Schools') ? 'selected' : ''; ?>>Schools</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="status">Status:</label>
+                        <select id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="not_started" <?php echo (isset($_GET['status']) && $_GET['status'] == 'not_started') ? 'selected' : ''; ?>>Not Started</option>
+                            <option value="in_progress" <?php echo (isset($_GET['status']) && $_GET['status'] == 'in_progress') ? 'selected' : ''; ?>>In Progress</option>
+                            <option value="completed" <?php echo (isset($_GET['status']) && $_GET['status'] == 'completed') ? 'selected' : ''; ?>>Completed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="priority">Priority:</label>
+                        <select id="priority" name="priority">
+                            <option value="">All Priorities</option>
+                            <option value="low" <?php echo (isset($_GET['priority']) && $_GET['priority'] == 'low') ? 'selected' : ''; ?>>Low</option>
+                            <option value="medium" <?php echo (isset($_GET['priority']) && $_GET['priority'] == 'medium') ? 'selected' : ''; ?>>Medium</option>
+                            <option value="high" <?php echo (isset($_GET['priority']) && $_GET['priority'] == 'high') ? 'selected' : ''; ?>>High</option>
+                            <option value="critical" <?php echo (isset($_GET['priority']) && $_GET['priority'] == 'critical') ? 'selected' : ''; ?>>Critical</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter"></i> Apply Filters
+                        </button>
+                        <a href="index.php?action=task_report" class="btn btn-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </a>
+                    </div>
                 </div>
-                
-                <div class="filter-item">
-                    <strong>Division:</strong>
-                    <span><?php echo !empty($selected_division) ? htmlspecialchars($selected_division) : 'All Divisions'; ?></span>
+            </form>
+        </div>
+        
+        <!-- Current Filter Display -->
+        <div style="margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                <div><strong>Year:</strong> <?php echo !empty($selected_year) ? htmlspecialchars($selected_year) : 'All Years'; ?></div>
+                <div><strong>As of:</strong> <?php echo $current_date; ?></div>
+                <div>
+                    <strong>Division:</strong> 
+                    <?php if(!empty($selected_division)): ?>
+                        <span class="division-badge division-<?php echo strtolower($selected_division); ?>">
+                            <?php echo htmlspecialchars($selected_division); ?>
+                        </span>
+                    <?php else: ?>
+                        <span>All Divisions</span>
+                    <?php endif; ?>
                 </div>
-                
-                <?php if(!empty($selected_project)): 
-                    $project_name = '';
-                    foreach($projects as $p) {
-                        if($p['id'] == $selected_project) {
-                            $project_name = $p['project_name'];
-                            break;
-                        }
-                    }
-                ?>
-                <div class="filter-item">
-                    <strong>Core Area:</strong>
-                    <span><?php echo htmlspecialchars($project_name); ?></span>
-                </div>
-                <?php endif; ?>
-                
                 <?php if(!empty($selected_status)): ?>
-                <div class="filter-item">
-                    <strong>Status:</strong>
-                    <span><?php echo ucfirst(str_replace('_', ' ', $selected_status)); ?></span>
-                </div>
+                <div><strong>Status:</strong> <?php echo ucfirst(str_replace('_', ' ', $selected_status)); ?></div>
                 <?php endif; ?>
-                
                 <?php if(!empty($selected_priority)): ?>
-                <div class="filter-item">
-                    <strong>Priority:</strong>
-                    <span><?php echo ucfirst($selected_priority); ?></span>
-                </div>
+                <div><strong>Priority:</strong> <?php echo ucfirst($selected_priority); ?></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -513,6 +664,7 @@
         if(empty($tasks)): ?>
             <div style="text-align: center; padding: 50px; background-color: #f8f9fa; border-radius: 5px;">
                 <h3>No commitments found matching the selected filters.</h3>
+                <p style="margin-top: 10px; color: #666;">Try adjusting your filter criteria.</p>
             </div>
         <?php else: ?>
             <?php foreach($tasks_by_project as $project_id => $project_data): 
@@ -571,11 +723,14 @@
                                     <?php echo htmlspecialchars(substr($task['task_details'], 0, 60)); ?>
                                     <?php if(strlen($task['task_details']) > 60) echo '...'; ?>
                                 </div>
+                                <div style="font-size: 9px; color: #666; margin-top: 2px;">
+                                    Div: <?php echo $task['functional_division'] ?? 'N/A'; ?>
+                                </div>
                             </td>
                             <td>
                                 <ul class="unit-list">
                                     <?php foreach(array_slice($unit_array, 0, 2) as $unit): ?>
-                                    <li><?php echo htmlspecialchars(substr($unit, 0, 20) . (strlen($unit) > 20 ? '...' : '')); ?></li>
+                                    <li><?php echo htmlspecialchars(substr($unit, 0, 15) . (strlen($unit) > 15 ? '...' : '')); ?></li>
                                     <?php endforeach; ?>
                                     <?php if(count($unit_array) > 2): ?>
                                     <li>+<?php echo count($unit_array) - 2; ?> more</li>
@@ -604,18 +759,18 @@
                                     <?php foreach(array_slice($status_history, 0, 3) as $history): ?>
                                     <li class="remarks-item">
                                         <span class="remarks-percentage"><?php echo $history['percentage'] ?? 0; ?>%</span> - 
-                                        <span class="remarks-text"><?php echo htmlspecialchars(substr($history['remarks'] ?? 'No remarks', 0, 40)); ?><?php echo strlen($history['remarks'] ?? '') > 40 ? '...' : ''; ?></span>
+                                        <span class="remarks-text"><?php echo htmlspecialchars(substr($history['remarks'] ?? 'No remarks', 0, 35)); ?><?php echo strlen($history['remarks'] ?? '') > 35 ? '...' : ''; ?></span>
                                         <div class="remarks-meta">
                                             <?php 
                                             if(isset($history['created_at'])) {
                                                 echo date('M d, Y', strtotime($history['created_at']));
                                             }
-                                            ?> by <?php echo htmlspecialchars(substr($history['updated_by_name'] ?? 'Unknown', 0, 10)); ?>
+                                            ?> by <?php echo htmlspecialchars(substr($history['updated_by_name'] ?? 'Unknown', 0, 8)); ?>
                                         </div>
                                     </li>
                                     <?php endforeach; ?>
                                     <?php if(count($status_history) > 3): ?>
-                                    <li>+<?php echo count($status_history) - 3; ?> more updates</li>
+                                    <li style="color: #666; font-style: italic;">+<?php echo count($status_history) - 3; ?> more updates</li>
                                     <?php endif; ?>
                                 </ul>
                                 <?php else: ?>
