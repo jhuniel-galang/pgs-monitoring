@@ -306,6 +306,13 @@ case 'delete_task_direct':
     $taskController->deleteDirect($_GET['id'] ?? 0);
     break;
 
+
+// Add this to your routing logic in index.php
+case 'task_report':
+    require_once 'controllers/TaskController.php';
+    $controller = new TaskController();
+    $controller->report();
+    break;
     
 
         // 404 page

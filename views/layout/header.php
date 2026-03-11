@@ -160,7 +160,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <?php if(isset($_SESSION['logged_in']) && $_SESSION['logged_in']): ?>
-                <!-- Logged in navigation -->
+
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="index.php?action=dashboard">Dashboard</a>

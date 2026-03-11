@@ -22,17 +22,31 @@
 
 <div class="row mb-4">
     <div class="col-md-8">
+        <h2>Commitments</h2>
         <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 'encoder'): ?>
             <p class="text-muted">Viewing tasks for: <strong><?php echo $_SESSION['functional_division'] ?? 'N/A'; ?></strong></p>
         <?php endif; ?>
     </div>
     <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
-<div class="col-md-4 text-end">
-    <a href="index.php?action=create_task_page" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Create New Commitment
-    </a>
-</div>
-<?php endif; ?>
+    <div class="col-md-4 text-end">
+        <div class="btn-group" role="group">
+            <a href="index.php?action=create_task_page" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create New Commitment
+            </a>
+            <a href="index.php?action=task_report<?php 
+                // Preserve current filters in the report
+                $report_params = [];
+                if(!empty($_GET['year'])) $report_params[] = 'year=' . urlencode($_GET['year']);
+                if(!empty($_GET['division'])) $report_params[] = 'division=' . urlencode($_GET['division']);
+                if(!empty($_GET['priority'])) $report_params[] = 'priority=' . urlencode($_GET['priority']);
+                if(!empty($_GET['status'])) $report_params[] = 'status=' . urlencode($_GET['status']);
+                echo !empty($report_params) ? '?' . implode('&', $report_params) : '';
+            ?>" class="btn btn-success" target="_blank">
+                <i class="bi bi-printer"></i> Print Report
+            </a>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Division Summary Cards -->
@@ -254,7 +268,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     var modalEl = document.getElementById('createTaskModal');
 
-    if (!modalEl) return; // IMPORTANT: prevents JS crash
+    if (!modalEl) return; 
 
     modalEl.addEventListener('hidden.bs.modal', function () {
         document.getElementById('modal_task_details').value = '';

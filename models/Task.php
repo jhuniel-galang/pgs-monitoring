@@ -493,5 +493,83 @@ class Task extends DatabaseModel {
             return ['success' => false, 'message' => 'Failed to delete task: ' . $e->getMessage()];
         }
     }
+
+
+
+
+    /**
+ * Get tasks with all their status history for reporting
+ */
+public function getTasksWithFullHistory($filters = []) {
+    // First get all tasks based on filters
+    $query = "SELECT t.*, 
+              p.project_name,
+              GROUP_CONCAT(DISTINCT u.unit_name SEPARATOR ', ') as unit_names
+              FROM " . $this->table . " t
+              LEFT JOIN tbl_projects p ON t.project_id = p.project_id
+              LEFT JOIN tbl_task_units tu ON t.task_id = tu.task_id
+              LEFT JOIN tbl_units u ON tu.unit_id = u.id
+              WHERE 1=1";
+    
+    $params = [];
+    
+    // Apply filters
+    if(!empty($filters['year'])) {
+        $query .= " AND t.year = :year";
+        $params[':year'] = $filters['year'];
+    }
+    
+    if(!empty($filters['division'])) {
+        $query .= " AND t.functional_division = :division";
+        $params[':division'] = $filters['division'];
+    }
+    
+    if(!empty($filters['priority'])) {
+        $query .= " AND t.priority = :priority";
+        $params[':priority'] = $filters['priority'];
+    }
+    
+    if(!empty($filters['project_id'])) {
+        $query .= " AND t.project_id = :project_id";
+        $params[':project_id'] = $filters['project_id'];
+    }
+    
+    $query .= " GROUP BY t.task_id ORDER BY t.functional_division, p.project_name, t.task_id";
+    
+    $stmt = $this->getConnection()->prepare($query);
+    
+    foreach($params as $key => &$val) {
+        $stmt->bindParam($key, $val);
+    }
+    
+    $stmt->execute();
+    $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Now get status history for each task
+    foreach($tasks as &$task) {
+        $history_query = "SELECT s.*, u.username as updated_by_name 
+                         FROM tbl_status s
+                         LEFT JOIN users u ON s.updated_by = u.id
+                         WHERE s.task_id = :task_id
+                         ORDER BY s.created_at DESC";
+        
+        $history_stmt = $this->getConnection()->prepare($history_query);
+        $history_stmt->execute([':task_id' => $task['task_id']]);
+        $task['status_history'] = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Set current percentage from the most recent status
+        if(!empty($task['status_history'])) {
+            $task['current_percentage'] = $task['status_history'][0]['percentage'] ?? 0;
+            $task['latest_remarks'] = $task['status_history'][0]['remarks'] ?? '';
+            $task['last_update'] = $task['status_history'][0]['update_date'] ?? '';
+        } else {
+            $task['current_percentage'] = 0;
+            $task['latest_remarks'] = '';
+            $task['last_update'] = '';
+        }
+    }
+    
+    return $tasks;
+}
 }
 ?>

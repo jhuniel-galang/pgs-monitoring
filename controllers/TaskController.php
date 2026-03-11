@@ -710,6 +710,65 @@ public function deleteDirect($task_id) {
 }
 
 
+/**
+ * Generate and display printable report
+ */
+/**
+ * Generate and display printable report with full remarks history
+ */
+public function report() {
+    $user = $this->auth->getCurrentUser();
+    
+    // Get filter parameters from URL
+    $selected_year = isset($_GET['year']) && !empty($_GET['year']) ? $_GET['year'] : '';
+    $selected_division = isset($_GET['division']) && !empty($_GET['division']) ? $_GET['division'] : '';
+    $selected_status = isset($_GET['status']) && !empty($_GET['status']) ? $_GET['status'] : '';
+    $selected_priority = isset($_GET['priority']) && !empty($_GET['priority']) ? $_GET['priority'] : '';
+    $selected_project = isset($_GET['project_id']) && !empty($_GET['project_id']) ? $_GET['project_id'] : '';
+    
+    // Build filters for tasks
+    $filters = [
+        'year' => $selected_year,
+        'division' => $selected_division,
+        'priority' => $selected_priority,
+        'project_id' => $selected_project
+    ];
+    
+    // Add role-based filter for encoders
+    if($user['role'] == 'encoder') {
+        $filters['division'] = $user['functional_division'];
+    }
+    
+    // Get tasks with full status history using the new method
+    $tasks = $this->task->getTasksWithFullHistory($filters);
+    
+    // Filter by status if needed (since the method doesn't filter by status)
+    if(!empty($selected_status)) {
+        $tasks = array_filter($tasks, function($task) use ($selected_status) {
+            $percentage = $task['current_percentage'] ?? 0;
+            if($selected_status == 'completed') return $percentage >= 100;
+            if($selected_status == 'in_progress') return $percentage > 0 && $percentage < 100;
+            if($selected_status == 'not_started') return $percentage == 0;
+            return true;
+        });
+    }
+    
+    // Get projects for filter dropdown
+    require_once __DIR__ . '/../models/Project.php';
+    $projectModel = new Project();
+    $projects = $projectModel->getProjectsForDropdown();
+    
+    // Get all units for reference
+    $units = $this->unit->getAllUnits();
+    
+    // Get current date for "as of" field
+    $current_date = date('F d, Y');
+    
+    // Load the report view
+    require_once __DIR__ . '/../views/tasks/report.php';
+}
+
+
     
 }
 ?>
