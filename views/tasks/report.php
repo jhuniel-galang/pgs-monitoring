@@ -680,7 +680,7 @@
                     <thead>
                         <tr>
                             <th class="col-id">ID</th>
-                            <th class="col-commitment">Commitment / Task</th>
+                            <th class="col-commitment">Commitments</th>
                             <th class="col-unit">Unit</th>
                             <th class="col-target">Target</th>
                             <th class="col-progress">Prog</th>
