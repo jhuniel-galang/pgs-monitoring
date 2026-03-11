@@ -15,11 +15,11 @@
             font-family: Arial, sans-serif;
             padding: 20px;
             background: white;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .report-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
         
@@ -183,13 +183,13 @@
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 11px;
-            table-layout: fixed;
+            table-layout: auto; /* Changed from fixed to auto */
         }
         
         .commitments-table th {
             background-color: #343a40;
             color: white;
-            padding: 8px 5px;
+            padding: 8px 10px;
             text-align: left;
             border: 1px solid #454d55;
             font-weight: bold;
@@ -197,9 +197,10 @@
         }
         
         .commitments-table td {
-            padding: 6px 5px;
+            padding: 8px 10px;
             border: 1px solid #dee2e6;
             vertical-align: top;
+            word-wrap: break-word;
         }
         
         .commitments-table tr:nth-child(even) {
@@ -210,20 +211,28 @@
             background-color: #e9ecef;
         }
         
-        /* Column widths */
+        /* Column widths - using auto layout, these are hints */
         .col-id { width: 3%; }
-        .col-commitment { width: 20%; }
-        .col-unit { width: 10%; }
+        .col-commitment { min-width: 250px; }
+        .col-unit { min-width: 150px; }
         .col-target { width: 8%; }
         .col-progress { width: 6%; }
         .col-status { width: 6%; }
         .col-priority { width: 5%; }
         .col-last-update { width: 8%; }
-        .col-remarks { width: 34%; }
+        .col-remarks { min-width: 300px; }
         
         .commitment-details {
             font-weight: bold;
             color: #333;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        
+        .commitment-full-text {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
         }
         
         .unit-list {
@@ -233,16 +242,18 @@
         }
         
         .unit-list li {
-            margin-bottom: 2px;
-            font-size: 10px;
+            margin-bottom: 3px;
+            font-size: 11px;
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         .status-badge {
-            padding: 2px 5px;
+            padding: 3px 8px;
             border-radius: 3px;
             font-weight: bold;
             display: inline-block;
-            font-size: 10px;
+            font-size: 11px;
             text-align: center;
             width: 100%;
         }
@@ -263,11 +274,11 @@
         }
         
         .priority-badge {
-            padding: 2px 5px;
+            padding: 3px 8px;
             border-radius: 3px;
             font-weight: bold;
             display: inline-block;
-            font-size: 10px;
+            font-size: 11px;
             text-align: center;
             width: 100%;
         }
@@ -293,10 +304,10 @@
         }
         
         .progress-bar-container {
-            width: 50px;
-            height: 6px;
+            width: 60px;
+            height: 8px;
             background-color: #e9ecef;
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: hidden;
             display: inline-block;
             margin-left: 5px;
@@ -305,7 +316,7 @@
         .progress-bar-fill {
             height: 100%;
             background-color: #28a745;
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .remarks-cell {
@@ -320,8 +331,8 @@
         }
         
         .remarks-item {
-            margin-bottom: 6px;
-            padding-bottom: 6px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
             border-bottom: 1px dotted #ccc;
         }
         
@@ -334,16 +345,22 @@
         .remarks-percentage {
             font-weight: bold;
             color: #007bff;
+            display: inline-block;
+            min-width: 45px;
         }
         
         .remarks-text {
-            margin: 2px 0;
+            margin: 5px 0;
             font-style: italic;
+            line-height: 1.3;
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         .remarks-meta {
-            font-size: 9px;
+            font-size: 10px;
             color: #666;
+            margin-top: 3px;
         }
         
         .report-footer {
@@ -429,6 +446,14 @@
         .division-schools {
             background-color: #6c757d;
             color: white;
+        }
+        
+        .div-info {
+            font-size: 10px;
+            color: #666;
+            margin-top: 3px;
+            padding-top: 3px;
+            border-top: 1px dotted #ccc;
         }
         
         @media print {
@@ -683,9 +708,9 @@
                             <th class="col-commitment">Commitments</th>
                             <th class="col-unit">Unit</th>
                             <th class="col-target">Target</th>
-                            <th class="col-progress">Prog</th>
+                            <th class="col-progress">Program</th>
                             <th class="col-status">Status</th>
-                            <th class="col-priority">Pri</th>
+                            <th class="col-priority">Priority</th>
                             <th class="col-last-update">Last Update</th>
                             <th class="col-remarks">Remarks History</th>
                         </tr>
@@ -700,7 +725,7 @@
                                 $status_text = 'Completed';
                             } elseif($percentage > 0) {
                                 $status_class = 'status-in-progress';
-                                $status_text = 'In Prog';
+                                $status_text = 'In Progress';
                             } else {
                                 $status_class = 'status-not-started';
                                 $status_text = 'Not Started';
@@ -719,25 +744,23 @@
                         <tr>
                             <td><?php echo $task['task_id']; ?></td>
                             <td>
-                                <div class="commitment-details">
-                                    <?php echo htmlspecialchars(substr($task['task_details'], 0, 60)); ?>
-                                    <?php if(strlen($task['task_details']) > 60) echo '...'; ?>
+                                <div class="commitment-full-text">
+                                    <?php echo htmlspecialchars($task['task_details']); ?>
                                 </div>
-                                <div style="font-size: 9px; color: #666; margin-top: 2px;">
-                                    Div: <?php echo $task['functional_division'] ?? 'N/A'; ?>
+                                <div class="div-info">
+                                    <strong>Division:</strong> <?php echo $task['functional_division'] ?? 'N/A'; ?>
                                 </div>
                             </td>
                             <td>
                                 <ul class="unit-list">
-                                    <?php foreach(array_slice($unit_array, 0, 2) as $unit): ?>
-                                    <li><?php echo htmlspecialchars(substr($unit, 0, 15) . (strlen($unit) > 15 ? '...' : '')); ?></li>
-                                    <?php endforeach; ?>
-                                    <?php if(count($unit_array) > 2): ?>
-                                    <li>+<?php echo count($unit_array) - 2; ?> more</li>
+                                    <?php foreach($unit_array as $unit): ?>
+                                    <?php if(!empty(trim($unit))): ?>
+                                    <li>• <?php echo htmlspecialchars($unit); ?></li>
                                     <?php endif; ?>
+                                    <?php endforeach; ?>
                                 </ul>
                             </td>
-                            <td><?php echo htmlspecialchars(substr($task['target_completion_date'] ?? '—', 0, 10)); ?></td>
+                            <td><?php echo htmlspecialchars($task['target_completion_date'] ?? '—'); ?></td>
                             <td>
                                 <?php echo $percentage; ?>%
                                 <div class="progress-bar-container">
@@ -749,29 +772,33 @@
                             </td>
                             <td>
                                 <span class="priority-badge priority-<?php echo $task['priority'] ?? 'medium'; ?>">
-                                    <?php echo strtoupper(substr($task['priority'] ?? 'MED', 0, 3)); ?>
+                                    <?php echo ucfirst($task['priority'] ?? 'Medium'); ?>
                                 </span>
                             </td>
                             <td><?php echo $last_update; ?></td>
                             <td class="remarks-cell">
                                 <?php if(!empty($status_history)): ?>
                                 <ul class="remarks-list">
-                                    <?php foreach(array_slice($status_history, 0, 3) as $history): ?>
+                                    <?php foreach($status_history as $history): ?>
                                     <li class="remarks-item">
-                                        <span class="remarks-percentage"><?php echo $history['percentage'] ?? 0; ?>%</span> - 
-                                        <span class="remarks-text"><?php echo htmlspecialchars(substr($history['remarks'] ?? 'No remarks', 0, 35)); ?><?php echo strlen($history['remarks'] ?? '') > 35 ? '...' : ''; ?></span>
+                                        <div>
+                                            <span class="remarks-percentage"><?php echo $history['percentage'] ?? 0; ?>%</span>
+                                            <span style="color: #666; font-size: 10px;">
+                                                (<?php 
+                                                if(isset($history['created_at'])) {
+                                                    echo date('M d, Y h:i A', strtotime($history['created_at']));
+                                                }
+                                                ?>)
+                                            </span>
+                                        </div>
+                                        <div class="remarks-text">
+                                            <?php echo nl2br(htmlspecialchars($history['remarks'] ?? 'No remarks')); ?>
+                                        </div>
                                         <div class="remarks-meta">
-                                            <?php 
-                                            if(isset($history['created_at'])) {
-                                                echo date('M d, Y', strtotime($history['created_at']));
-                                            }
-                                            ?> by <?php echo htmlspecialchars(substr($history['updated_by_name'] ?? 'Unknown', 0, 8)); ?>
+                                            Updated by: <?php echo htmlspecialchars($history['updated_by_name'] ?? 'Unknown'); ?>
                                         </div>
                                     </li>
                                     <?php endforeach; ?>
-                                    <?php if(count($status_history) > 3): ?>
-                                    <li style="color: #666; font-style: italic;">+<?php echo count($status_history) - 3; ?> more updates</li>
-                                    <?php endif; ?>
                                 </ul>
                                 <?php else: ?>
                                 <span style="color: #999; font-style: italic;">No remarks</span>
