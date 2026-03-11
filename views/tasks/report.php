@@ -24,52 +24,68 @@
         }
         
         .report-header {
-            text-align: center;
-            margin-bottom: 20px;
+            position: relative;
+            margin-bottom: 30px;
             border-bottom: 2px solid #333;
-            padding-bottom: 15px;
+            padding-bottom: 20px;
+            min-height: 100px;
         }
         
-        .logo-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
-        
-        .logo {
+        .logo-left {
+            position: absolute;
+            left: 0;
+            top: 0;
             width: 80px;
             height: auto;
-            margin-right: 15px;
         }
         
-        .logo img {
+        .logo-right {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 80px;
+            height: auto;
+        }
+        
+        .logo-left img, .logo-right img {
             width: 100%;
             height: auto;
             display: block;
         }
         
         .header-text {
-            text-align: left;
+            text-align: center;
+            padding: 0 100px;
+            color: #000;
         }
         
         .header-text h1 {
-            font-size: 18px;
-            margin-bottom: 2px;
-            color: #333;
+            font-size: 20px;
+            margin-bottom: 5px;
+            color: #000;
+            font-weight: bold;
         }
         
         .header-text h2 {
-            font-size: 14px;
-            color: #666;
+            font-size: 16px;
+            color: #000;
             font-weight: normal;
+            margin-bottom: 5px;
         }
         
         .header-text h3 {
-            font-size: 13px;
-            color: #007bff;
-            margin-top: 2px;
-            font-weight: normal;
+            font-size: 14px;
+            color: #000;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        .header-text .pgs-title {
+            font-size: 18px;
+            color: #000;
+            font-weight: bold;
+            margin-top: 5px;
+            letter-spacing: 1px;
         }
         
         .report-filters {
@@ -183,7 +199,7 @@
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 11px;
-            table-layout: auto; /* Changed from fixed to auto */
+            table-layout: auto;
         }
         
         .commitments-table th {
@@ -211,7 +227,6 @@
             background-color: #e9ecef;
         }
         
-        /* Column widths - using auto layout, these are hints */
         .col-id { width: 3%; }
         .col-commitment { min-width: 250px; }
         .col-unit { min-width: 150px; }
@@ -391,32 +406,141 @@
         }
         
         .summary-section {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 30px;
+            padding: 20px;
             background-color: #f8f9fa;
             border-radius: 5px;
         }
         
+        .summary-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+        
         .summary-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
-            margin-top: 10px;
+            margin-bottom: 20px;
         }
         
         .summary-item {
-            flex: 1;
-            min-width: 150px;
-            text-align: center;
-            padding: 10px;
             background-color: white;
-            border-radius: 5px;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .summary-number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .division-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        
+        .division-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .division-card.filtered {
+            border: 3px solid #ffc107;
+            transform: scale(1.02);
+        }
+        
+        .division-header {
+            padding: 12px 15px;
+            color: white;
+        }
+        
+        .division-header h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .division-stats {
+            padding: 15px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #555;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+        }
+        
+        .stat-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stat-total .label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .stat-total .value {
             font-size: 24px;
             font-weight: bold;
+        }
+        
+        .progress-container {
+            margin-top: 10px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .legend-box {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff3cd;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #856404;
         }
         
         .division-badge {
@@ -454,6 +578,16 @@
             margin-top: 3px;
             padding-top: 3px;
             border-top: 1px dotted #ccc;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            [style*="grid-template-columns: repeat(2, 1fr)"] {
+                grid-template-columns: 1fr !important;
+            }
         }
         
         @media print {
@@ -562,26 +696,38 @@
             }
         }
     </style>
-    <!-- Bootstrap Icons (optional) -->
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
+    <?php
+    // Get current year for default
+    $current_year = date('Y');
+    ?>
+    
     <button class="print-button" onclick="window.print()">
         <i class="bi bi-printer"></i> Print Report
     </button>
     
     <div class="report-container">
-        <!-- Report Header with Logo -->
+        <!-- Report Header with Two Logos -->
         <div class="report-header">
-            <div class="logo-container">
-                <div class="logo">
-                    <img src="assets/images/5-removebg-preview.png" alt="DepEd Division of San Fernando Logo">
-                </div>
-                <div class="header-text">
-                    <h1>Republic of the Philippines</h1>
-                    <h2>Department of Education</h2>
-                    <h3>SCHOOLS DIVISION OFFICE - CITY OF SAN FERNANDO, PAMPANGA</h3>
-                </div>
+            <!-- Left Logo -->
+            <div class="logo-left">
+                <img src="assets/images/7.jpeg" alt="DepEd Division of San Fernando Logo">
+            </div>
+            
+            <!-- Right Logo -->
+            <div class="logo-right">
+                <img src="assets/images/5-removebg-preview.png" alt="Republic of the Philippines Logo">
+            </div>
+            
+            <!-- Centered Header Text - Black -->
+            <div class="header-text">
+                <h1>Republic of the Philippines</h1>
+                <h2>Department of Education</h2>
+                <h3>SCHOOLS DIVISION OFFICE - CITY OF SAN FERNANDO, PAMPANGA</h3>
+                <div class="pgs-title">PGS MONITORING REPORT</div>
             </div>
         </div>
         
@@ -594,7 +740,7 @@
                     <div class="filter-item">
                         <label for="year">Year:</label>
                         <input type="text" id="year" name="year" placeholder="e.g., 2024" 
-                               value="<?php echo htmlspecialchars($_GET['year'] ?? ''); ?>">
+                               value="<?php echo htmlspecialchars($_GET['year'] ?? $current_year); ?>">
                     </div>
                     
                     <div class="filter-item">
@@ -644,7 +790,7 @@
         <!-- Current Filter Display -->
         <div style="margin-bottom: 15px; padding: 10px; background-color: #e9ecef; border-radius: 5px;">
             <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
-                <div><strong>Year:</strong> <?php echo !empty($selected_year) ? htmlspecialchars($selected_year) : 'All Years'; ?></div>
+                <div><strong>Year:</strong> <?php echo !empty($selected_year) ? htmlspecialchars($selected_year) : $current_year; ?></div>
                 <div><strong>As of:</strong> <?php echo $current_date; ?></div>
                 <div>
                     <strong>Division:</strong> 
@@ -669,27 +815,29 @@
         <?php
         // Group tasks by project (core area)
         $tasks_by_project = [];
-        foreach($tasks as $task) {
-            $project_id = $task['project_id'] ?? 0;
-            $project_name = $task['project_name'] ?? 'Unassigned Core Area';
-            
-            if(!isset($tasks_by_project[$project_id])) {
-                $tasks_by_project[$project_id] = [
-                    'project_name' => $project_name,
-                    'tasks' => []
-                ];
+        if(isset($tasks) && !empty($tasks)) {
+            foreach($tasks as $task) {
+                $project_id = $task['project_id'] ?? 0;
+                $project_name = $task['project_name'] ?? 'Unassigned Core Area';
+                
+                if(!isset($tasks_by_project[$project_id])) {
+                    $tasks_by_project[$project_id] = [
+                        'project_name' => $project_name,
+                        'tasks' => []
+                    ];
+                }
+                
+                $tasks_by_project[$project_id]['tasks'][] = $task;
             }
             
-            $tasks_by_project[$project_id]['tasks'][] = $task;
+            // Sort projects by name
+            ksort($tasks_by_project);
         }
-        
-        // Sort projects by name
-        ksort($tasks_by_project);
         
         if(empty($tasks)): ?>
             <div style="text-align: center; padding: 50px; background-color: #f8f9fa; border-radius: 5px;">
-                <h3>No commitments found matching the selected filters.</h3>
-                <p style="margin-top: 10px; color: #666;">Try adjusting your filter criteria.</p>
+                <h3>No commitments found for <?php echo !empty($selected_year) ? htmlspecialchars($selected_year) : $current_year; ?>.</h3>
+                <p style="margin-top: 10px; color: #666;">Try adjusting your filter criteria or check other years.</p>
             </div>
         <?php else: ?>
             <?php foreach($tasks_by_project as $project_id => $project_data): 
@@ -813,46 +961,157 @@
             
             <!-- Summary Section -->
             <div class="summary-section">
-                <h3 style="margin-bottom: 10px; font-size: 14px;">Report Summary</h3>
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <div class="summary-number"><?php echo count($tasks); ?></div>
-                        <div>Total Commitments</div>
+                <div class="summary-title">Report Summary (<?php echo !empty($selected_year) ? htmlspecialchars($selected_year) : $current_year; ?>)</div>
+                
+                <!-- Overall Summary Cards -->
+                <div style="margin-bottom: 30px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px; color: #333;">
+                        <i class="bi bi-pie-chart"></i> Overall Summary
                     </div>
-                    <div class="summary-item">
-                        <div class="summary-number" style="color: #28a745;">
-                            <?php 
-                            $completed = array_filter($tasks, function($t) {
-                                return ($t['current_percentage'] ?? 0) >= 100;
-                            });
-                            echo count($completed);
-                            ?>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-number"><?php echo count($tasks); ?></div>
+                            <div>Total Commitments</div>
                         </div>
-                        <div>Completed</div>
+                        <div class="summary-item">
+                            <div class="summary-number" style="color: #28a745;">
+                                <?php 
+                                $completed = array_filter($tasks, function($t) {
+                                    return ($t['current_percentage'] ?? 0) >= 100;
+                                });
+                                echo count($completed);
+                                ?>
+                            </div>
+                            <div>Completed</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" style="color: #ffc107;">
+                                <?php 
+                                $in_progress = array_filter($tasks, function($t) {
+                                    $p = $t['current_percentage'] ?? 0;
+                                    return $p > 0 && $p < 100;
+                                });
+                                echo count($in_progress);
+                                ?>
+                            </div>
+                            <div>In Progress</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" style="color: #dc3545;">
+                                <?php 
+                                $not_started = array_filter($tasks, function($t) {
+                                    return ($t['current_percentage'] ?? 0) == 0;
+                                });
+                                echo count($not_started);
+                                ?>
+                            </div>
+                            <div>Not Started</div>
+                        </div>
                     </div>
-                    <div class="summary-item">
-                        <div class="summary-number" style="color: #ffc107;">
-                            <?php 
-                            $in_progress = array_filter($tasks, function($t) {
+                </div>
+                
+                <!-- Division-wise Summary - Each division as card style -->
+                <div>
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px; color: #333;">
+                        <i class="bi bi-diagram-3"></i> Breakdown by Functional Division
+                    </div>
+                    
+                    <?php
+                    // Calculate division-wise statistics
+                    $divisions = ['OSDS', 'CID', 'SGOD', 'Schools'];
+                    $division_stats = [];
+                    $division_colors = [
+                        'OSDS' => '#007bff',
+                        'CID' => '#28a745',
+                        'SGOD' => '#17a2b8',
+                        'Schools' => '#6c757d'
+                    ];
+                    
+                    foreach($divisions as $division) {
+                        $division_tasks = array_filter($tasks, function($t) use ($division) {
+                            return ($t['functional_division'] ?? '') == $division;
+                        });
+                        
+                        $division_stats[$division] = [
+                            'total' => count($division_tasks),
+                            'completed' => count(array_filter($division_tasks, function($t) {
+                                return ($t['current_percentage'] ?? 0) >= 100;
+                            })),
+                            'in_progress' => count(array_filter($division_tasks, function($t) {
                                 $p = $t['current_percentage'] ?? 0;
                                 return $p > 0 && $p < 100;
-                            });
-                            echo count($in_progress);
-                            ?>
-                        </div>
-                        <div>In Progress</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-number" style="color: #dc3545;">
-                            <?php 
-                            $not_started = array_filter($tasks, function($t) {
+                            })),
+                            'not_started' => count(array_filter($division_tasks, function($t) {
                                 return ($t['current_percentage'] ?? 0) == 0;
-                            });
-                            echo count($not_started);
-                            ?>
+                            }))
+                        ];
+                    }
+                    ?>
+                    
+                    <!-- Division Cards Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 15px;">
+                        <?php foreach($division_stats as $division => $stats): 
+                            $bg_color = $division_colors[$division];
+                            $is_filtered = (!empty($selected_division) && $selected_division == $division);
+                            $card_style = $is_filtered ? 'border: 3px solid #ffc107; transform: scale(1.02);' : '';
+                        ?>
+                        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; <?php echo $card_style; ?> transition: all 0.2s;">
+                            <!-- Division Header -->
+                            <div style="background-color: <?php echo $bg_color; ?>; color: white; padding: 12px 15px;">
+                                <h4 style="margin: 0; font-size: 16px; font-weight: bold;"><?php echo $division; ?> Division</h4>
+                            </div>
+                            
+                            <!-- Statistics -->
+                            <div style="padding: 15px;">
+                                <!-- Total -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                                    <span style="font-weight: bold; color: #555;">Total Commitments</span>
+                                    <span style="font-size: 24px; font-weight: bold; color: <?php echo $bg_color; ?>;"><?php echo $stats['total']; ?></span>
+                                </div>
+                                
+                                <!-- Completed -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="color: #555;">Completed</span>
+                                    <span style="font-weight: bold; color: #28a745;"><?php echo $stats['completed']; ?></span>
+                                </div>
+                                
+                                <!-- In Progress -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="color: #555;">In Progress</span>
+                                    <span style="font-weight: bold; color: #ffc107;"><?php echo $stats['in_progress']; ?></span>
+                                </div>
+                                
+                                <!-- Not Started -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <span style="color: #555;">Not Started</span>
+                                    <span style="font-weight: bold; color: #dc3545;"><?php echo $stats['not_started']; ?></span>
+                                </div>
+                                
+                                <!-- Progress Bar -->
+                                <div style="margin-top: 10px;">
+                                    <?php 
+                                    $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['total']) * 100) : 0;
+                                    ?>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-size: 12px; color: #666;">Completion Rate</span>
+                                        <span style="font-size: 12px; font-weight: bold;"><?php echo $completion_rate; ?>%</span>
+                                    </div>
+                                    <div style="width: 100%; height: 8px; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                        <div style="width: <?php echo $completion_rate; ?>%; height: 100%; background-color: <?php echo $bg_color; ?>; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div>Not Started</div>
+                        <?php endforeach; ?>
                     </div>
+                    
+                    <!-- Legend for filtered division -->
+                    <?php if(!empty($selected_division)): ?>
+                    <div style="margin-top: 15px; padding: 10px; background-color: #fff3cd; border-radius: 5px; font-size: 12px; color: #856404;">
+                        <i class="bi bi-info-circle"></i> 
+                        The <strong><?php echo htmlspecialchars($selected_division); ?></strong> card is highlighted as it matches your current filter.
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endif; ?>
