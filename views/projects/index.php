@@ -4,7 +4,7 @@
     <div class="col-md-8">
         <h2>Core Area</h2>
     </div>
-    <?php if($_SESSION['role'] == 'admin'): ?>
+    <?php if($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'encoder'): ?>
     <div class="col-md-4 text-end">
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
             <i class="bi bi-plus-circle"></i> Create New Core Area
@@ -316,7 +316,7 @@
 </div>
 
 <!-- Create Project Modal - Change year to text input -->
-<?php if($_SESSION['role'] == 'admin'): ?>
+<?php if($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'encoder'): ?>  <!-- Changed this line -->
 <div class="modal fade" id="createProjectModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -339,6 +339,7 @@
                         
                         <div class="col-md-6 mb-3">
                             <label for="functional_division" class="form-label">Lead Division <span class="text-danger">*</span></label>
+                            <?php if($_SESSION['role'] == 'admin'): ?>
                             <select class="form-select" id="functional_division" name="functional_division" required>
                                 <option value="">Select Lead Division</option>
                                 <option value="OSDS">OSDS</option>
@@ -346,6 +347,12 @@
                                 <option value="SGOD">SGOD</option>
                                 <option value="Schools">Schools</option>
                             </select>
+                            <?php else: ?>
+                            <!-- For encoders, division is fixed to their own -->
+                            <input type="text" class="form-control" value="<?php echo $_SESSION['functional_division']; ?>" readonly>
+                            <input type="hidden" name="functional_division" value="<?php echo $_SESSION['functional_division']; ?>">
+                            <small class="text-muted">You can only create core areas for your division</small>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="col-md-6 mb-3">
@@ -383,8 +390,14 @@
 <?php endif; ?>
 
 <!-- Edit Project Modals - Change year to text input -->
-<?php if($_SESSION['role'] == 'admin'): ?>
+<?php if($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'encoder'): ?>
     <?php foreach($projects as $project): ?>
+        <?php 
+        // For encoders, only show edit modal for their own division projects
+        if($_SESSION['role'] == 'encoder' && $project['functional_division'] != $_SESSION['functional_division']) {
+            continue;
+        }
+        ?>
     <div class="modal fade" id="editProjectModal<?php echo $project['project_id']; ?>" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">

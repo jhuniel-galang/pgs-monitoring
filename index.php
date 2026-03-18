@@ -14,51 +14,51 @@ $action = isset($_GET['action']) ? $_GET['action'] : 'login';
 switch($action) {
     // Auth routes
     case 'login':
-    // For public view, we need to load projects for the slideshow
-    require_once 'models/Project.php';
-    require_once 'models/Task.php';
-    
-    $projectModel = new Project();
-    $taskModel = new Task();
-    
-    // Get selected year from URL parameter
-    $selected_year = isset($_GET['year']) && !empty($_GET['year']) ? $_GET['year'] : '2026';
-    
-    // Get available years for the filter dropdown
-    $available_years = $projectModel->getDistinctYears();
-    
-    // Get projects filtered by year
-    $filters = [];
-    if ($selected_year) {
-        $filters['year'] = $selected_year;
-    }
-    $projects = $projectModel->getAllProjects($filters, 100, 0);
-    
-    // Get all tasks
-    $all_tasks = $taskModel->getAllTasks();
-    
-    // Filter tasks by year if selected
-    if ($selected_year) {
-        $all_tasks = array_filter($all_tasks, function($task) use ($selected_year) {
-            return isset($task['year']) && $task['year'] == $selected_year;
-        });
-    }
-    
-    // Get division summary
-    $division_summary = $projectModel->getProjectSummary($selected_year);
-    
-    // Get recent tasks
-    $recent_tasks = array_slice($all_tasks, 0, 8);
-    
-    // Count filtered projects and tasks
-    $filtered_project_count = count($projects);
-    $filtered_task_count = count($all_tasks);
-    
-    // Get error from URL if exists
-    $error = isset($_GET['error']) ? $_GET['error'] : '';
-    
-    require_once 'views/auth/login.php';
-    break;
+        // For public view, we need to load projects for the slideshow
+        require_once 'models/Project.php';
+        require_once 'models/Task.php';
+        
+        $projectModel = new Project();
+        $taskModel = new Task();
+        
+        // Get selected year from URL parameter
+        $selected_year = isset($_GET['year']) && !empty($_GET['year']) ? $_GET['year'] : '2026';
+        
+        // Get available years for the filter dropdown
+        $available_years = $projectModel->getDistinctYears();
+        
+        // Get projects filtered by year
+        $filters = [];
+        if ($selected_year) {
+            $filters['year'] = $selected_year;
+        }
+        $projects = $projectModel->getAllProjects($filters, 100, 0);
+        
+        // Get all tasks
+        $all_tasks = $taskModel->getAllTasks();
+        
+        // Filter tasks by year if selected
+        if ($selected_year) {
+            $all_tasks = array_filter($all_tasks, function($task) use ($selected_year) {
+                return isset($task['year']) && $task['year'] == $selected_year;
+            });
+        }
+        
+        // Get division summary
+        $division_summary = $projectModel->getProjectSummary($selected_year);
+        
+        // Get recent tasks
+        $recent_tasks = array_slice($all_tasks, 0, 8);
+        
+        // Count filtered projects and tasks
+        $filtered_project_count = count($projects);
+        $filtered_task_count = count($all_tasks);
+        
+        // Get error from URL if exists
+        $error = isset($_GET['error']) ? $_GET['error'] : '';
+        
+        require_once 'views/auth/login.php';
+        break;
         
     case 'authenticate':
         require_once 'controllers/AuthController.php';
@@ -82,73 +82,72 @@ switch($action) {
         $taskController->dashboard();
         break;
     
-    // Task routes - CLEANED UP VERSION
-case 'tasks':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->index();
-    break;
+    // Task routes
+    case 'tasks':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->index();
+        break;
 
-case 'create_task':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->create();
-    break;
+    case 'create_task':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->create();
+        break;
 
-case 'create_task_page':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->createPage();
-    break;
+    case 'create_task_page':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->createPage();
+        break;
 
-case 'update_status':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->updateStatus();
-    break;
+    case 'update_status':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->updateStatus();
+        break;
 
-case 'update_task_page':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->updatePage($_GET['id'] ?? 0);
-    break;
+    case 'update_task_page':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->updatePage($_GET['id'] ?? 0);
+        break;
 
-case 'view_task':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->view($_GET['id'] ?? 0);
-    break;
+    case 'view_task':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->view($_GET['id'] ?? 0);
+        break;
 
-case 'get_task':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->getTaskJson();
-    break;
+    case 'get_task':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->getTaskJson();
+        break;
 
-case 'edit_task_page':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->editPage($_GET['id'] ?? 0);
-    break;
+    case 'edit_task_page':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->editPage($_GET['id'] ?? 0);
+        break;
 
-case 'update_task':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->updateTask();
-    break;
+    case 'update_task':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->updateTask();
+        break;
 
-case 'delete_task':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->delete();
-    break;
+    case 'delete_task':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->delete();
+        break;
 
-// Optional: Add this for testing direct delete
-case 'delete_task_direct':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->deleteDirect($_GET['id'] ?? 0);
-    break;
+    case 'delete_task_direct':
+        require_once 'controllers/TaskController.php';
+        $taskController = new TaskController();
+        $taskController->deleteDirect($_GET['id'] ?? 0);
+        break;
     
     // User routes
     case 'profile':
@@ -218,108 +217,92 @@ case 'delete_task_direct':
         $unitController->delete();
         break;
 
-
     // Project routes
-case 'projects':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->index();
-    break;
+    case 'projects':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->index();
+        break;
 
-case 'store_project':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->store();
-    break;
+    case 'store_project':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->store();
+        break;
 
-case 'update_project':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->update();
-    break;
+    case 'update_project':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->update();
+        break;
 
-case 'delete_project':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->delete();
-    break;
+    case 'delete_project':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->delete();
+        break;
 
-case 'view_project':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->view($_GET['id']);
-    break;
-
-
-
-
-
+    case 'view_project':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->view($_GET['id']);
+        break;
 
     case 'update_project_progress':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->updateProgress();
-    break;
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->updateProgress();
+        break;
 
-case 'add_project_units':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->addUnits();
-    break;
+    case 'add_project_units':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->addUnits();
+        break;
 
-case 'remove_project_unit':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->removeUnit();
-    break;
+    case 'remove_project_unit':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->removeUnit();
+        break;
 
-// Add this near your other action cases
-case 'get_project_json':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->getProjectJson();
-    break;
+    case 'get_project_json':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->getProjectJson();
+        break;
 
-    // Add these cases to your index.php switch statement
+    case 'add_project_units':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->addProjectUnits();
+        break;
 
-case 'update_project_progress':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->updateProgress();
-    break;
+    case 'remove_project_unit':
+        require_once 'controllers/ProjectController.php';
+        $projectController = new ProjectController();
+        $projectController->removeProjectUnit();
+        break;
 
-case 'add_project_units':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->addProjectUnits();
-    break;
-
-case 'remove_project_unit':
-    require_once 'controllers/ProjectController.php';
-    $projectController = new ProjectController();
-    $projectController->removeProjectUnit();
-    break;
-
-case 'delete_task_direct':
-    require_once 'controllers/TaskController.php';
-    $taskController = new TaskController();
-    $taskController->deleteDirect($_GET['id'] ?? 0);
-    break;
-
-
-// Add this to your routing logic in index.php
-case 'task_report':
-    require_once 'controllers/TaskController.php';
-    $controller = new TaskController();
+    // PUBLIC REPORT - Add this case
+    case 'public_report':
+    require_once 'controllers/PublicController.php';
+    $controller = new PublicController();
     $controller->report();
     break;
-    
 
-        // 404 page
+    // TASK REPORT (authenticated)
+    case 'task_report':
+        require_once 'controllers/TaskController.php';
+        $controller = new TaskController();
+        $controller->report();
+        break;
+
+    // Default case - 404 handler (should be LAST)
+    default:
         header("HTTP/1.0 404 Not Found");
         echo "<h1>Page Not Found</h1>";
         echo "<p>The requested action '".htmlspecialchars($action)."' does not exist.</p>";
         echo '<p><a href="index.php?action=dashboard">Go to Dashboard</a></p>';
         break;
 }
-?>

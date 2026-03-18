@@ -240,6 +240,8 @@ echo '<div class="public-view">';
                     </button>
                     <?php endforeach; ?>
                 </div>
+                
+                
             </div>
         </div>
     </div>
@@ -259,9 +261,21 @@ echo '<div class="public-view">';
 </div>
 <?php endif; ?>
 
+
+
 </div> <!-- end public-view -->
 
-
+<!-- Bottom Button - Redirect to Public Report -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="text-center">
+            <a href="index.php?action=public_report&year=<?php echo isset($selected_year) ? urlencode($selected_year) : ''; ?>" 
+               class="btn btn-primary btn-lg px-5 py-3 shadow">
+                <i class="bi bi-file-text"></i> View Complete Report
+            </a>
+        </div>
+    </div>
+</div>
 
 <!-- Music Player Control - Added for public view -->
 <div class="row mb-3">

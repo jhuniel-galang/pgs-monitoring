@@ -62,10 +62,16 @@ public function store() {
     if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $this->auth->getCurrentUser();
         
-        if($user['role'] != 'admin') {
+        // Allow both admin and encoder to create projects
+        if($user['role'] != 'admin' && $user['role'] != 'encoder') {
             $_SESSION['error'] = "Unauthorized access";
             header("Location: index.php?action=projects");
             exit();
+        }
+        
+        // For encoders, force the division to be their own
+        if($user['role'] == 'encoder') {
+            $_POST['functional_division'] = $user['functional_division'];
         }
         
         $data = [
@@ -73,7 +79,7 @@ public function store() {
             'project_name' => $_POST['project_name'],
             'project_description' => $_POST['project_description'] ?? null,
             'functional_division' => $_POST['functional_division'],
-            'year' => $_POST['year'] ?? '', // ADD THIS LINE - include the year field
+            'year' => $_POST['year'] ?? '',
             'project_lead' => $_POST['project_lead'] ?? null,
             'lead_designation' => $_POST['lead_designation'] ?? null,
             'start_date' => $_POST['start_date'] ?? null,
@@ -104,7 +110,8 @@ public function update() {
     if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $this->auth->getCurrentUser();
         
-        if($user['role'] != 'admin') {
+        // Allow both admin and encoder to update
+        if($user['role'] != 'admin' && $user['role'] != 'encoder') {
             $_SESSION['error'] = "Unauthorized access";
             header("Location: index.php?action=projects");
             exit();
@@ -112,12 +119,27 @@ public function update() {
         
         $project_id = $_POST['project_id'];
         
+        // Get the original project to check division
+        $original_project = $this->project->getProjectById($project_id);
+        
+        // For encoders, ensure they're only updating their own division's projects
+        if($user['role'] == 'encoder' && $original_project['functional_division'] != $user['functional_division']) {
+            $_SESSION['error'] = "You don't have permission to update this project";
+            header("Location: index.php?action=projects");
+            exit();
+        }
+        
+        // For encoders, force the division to remain the same
+        if($user['role'] == 'encoder') {
+            $_POST['functional_division'] = $original_project['functional_division'];
+        }
+        
         $data = [
             'project_code' => $_POST['project_code'],
             'project_name' => $_POST['project_name'],
             'project_description' => $_POST['project_description'] ?? null,
             'functional_division' => $_POST['functional_division'],
-            'year' => $_POST['year'] ?? '', // ADD THIS LINE - include the year field
+            'year' => $_POST['year'] ?? '',
             'project_lead' => $_POST['project_lead'] ?? null,
             'lead_designation' => $_POST['lead_designation'] ?? null,
             'start_date' => $_POST['start_date'] ?? null,
@@ -142,30 +164,31 @@ public function update() {
     }
 }
     // Delete project
-    public function delete() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $user = $this->auth->getCurrentUser();
-            
-            if($user['role'] != 'admin') {
-                $_SESSION['error'] = "Unauthorized access";
-                header("Location: index.php?action=projects");
-                exit();
-            }
-            
-            $project_id = $_POST['project_id'];
-            
-            $result = $this->project->deleteProject($project_id);
-            
-            if($result['success']) {
-                $_SESSION['success'] = $result['message'];
-            } else {
-                $_SESSION['error'] = $result['message'];
-            }
-            
+public function delete() {
+    if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $user = $this->auth->getCurrentUser();
+        
+        // Only admin can delete projects (for safety)
+        if($user['role'] != 'admin') {
+            $_SESSION['error'] = "Only administrators can delete projects";
             header("Location: index.php?action=projects");
             exit();
         }
+        
+        $project_id = $_POST['project_id'];
+        
+        $result = $this->project->deleteProject($project_id);
+        
+        if($result['success']) {
+            $_SESSION['success'] = $result['message'];
+        } else {
+            $_SESSION['error'] = $result['message'];
+        }
+        
+        header("Location: index.php?action=projects");
+        exit();
     }
+}
 
     // View project details
     // View project details

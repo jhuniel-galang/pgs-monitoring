@@ -71,8 +71,8 @@ class TaskController {
     public function create() {
     $user = $this->auth->getCurrentUser();
     
-    // Only admin can create tasks
-    if($user['role'] != 'admin') {
+    // Allow both admin and encoder to create tasks
+    if($user['role'] != 'admin' && $user['role'] != 'encoder') {
         $_SESSION['error'] = "Unauthorized access";
         header("Location: index.php?action=tasks");
         exit();
@@ -85,19 +85,19 @@ class TaskController {
         // Validate input
         if(empty($_POST['task_details'])) {
             $_SESSION['error'] = "Task details is required";
-            header("Location: index.php?action=tasks");
+            header("Location: index.php?action=create_task_page");
             exit();
         }
         
         if(empty($_POST['functional_division'])) {
             $_SESSION['error'] = "Division is required";
-            header("Location: index.php?action=tasks");
+            header("Location: index.php?action=create_task_page");
             exit();
         }
         
         if(empty($_POST['year'])) {
             $_SESSION['error'] = "Year is required";
-            header("Location: index.php?action=tasks");
+            header("Location: index.php?action=create_task_page");
             exit();
         }
         
@@ -112,13 +112,20 @@ class TaskController {
         
         if(empty($unit_ids)) {
             $_SESSION['error'] = "At least one unit must be selected";
-            header("Location: index.php?action=tasks");
+            header("Location: index.php?action=create_task_page");
             exit();
         }
         
         if(empty($_POST['target_completion_date'])) {
             $_SESSION['error'] = "Target completion date is required";
-            header("Location: index.php?action=tasks");
+            header("Location: index.php?action=create_task_page");
+            exit();
+        }
+        
+        // For encoders, ensure they're only creating tasks in their division
+        if($user['role'] == 'encoder' && $_POST['functional_division'] != $user['functional_division']) {
+            $_SESSION['error'] = "You can only create tasks in your own division";
+            header("Location: index.php?action=create_task_page");
             exit();
         }
         
@@ -382,7 +389,7 @@ class TaskController {
     require_once __DIR__ . '/../views/tasks/dashboard.php';
 }
 
-    // New method for dedicated update page
+    // Method for dedicated update page
    public function updatePage($task_id) {
     $user = $this->auth->getCurrentUser();
     
@@ -410,7 +417,7 @@ class TaskController {
     require_once __DIR__ . '/../views/tasks/update.php';
 }
 
-    // New method for updating task (with units)
+    // Method for updating task (with units)
     public function update() {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {
             $user = $this->auth->getCurrentUser();
@@ -503,38 +510,19 @@ class TaskController {
     exit;
 }
 
-// Add this helper method to TaskController
+// Helper method
 private function getStatusFromPercentage($percentage) {
     if($percentage >= 100) return 'completed';
     if($percentage > 0) return 'in_progress';
     return 'not_started';
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Show create task page
+// Show create task page - UPDATED to allow encoders
 public function createPage() {
     $user = $this->auth->getCurrentUser();
     
-    // Only admin can access create page
-    if($user['role'] != 'admin') {
+    // Allow both admin and encoder to access create page
+    if($user['role'] != 'admin' && $user['role'] != 'encoder') {
         $_SESSION['error'] = "Unauthorized access";
         header("Location: index.php?action=tasks");
         exit();
@@ -550,7 +538,6 @@ public function createPage() {
     
     require_once __DIR__ . '/../views/tasks/create.php';
 }
-
 
 public function delete() {
     if($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -577,7 +564,6 @@ public function delete() {
         exit();
     }
 }
-
 
 // Show edit task page
 public function editPage($task_id) {
@@ -609,7 +595,6 @@ public function editPage($task_id) {
     
     require_once __DIR__ . '/../views/tasks/edit.php';
 }
-
 
 // Update task details (not progress)
 public function updateTask() {
@@ -684,7 +669,6 @@ public function updateTask() {
     }
 }
 
-
 public function deleteDirect($task_id) {
     $user = $this->auth->getCurrentUser();
     
@@ -709,10 +693,6 @@ public function deleteDirect($task_id) {
     exit();
 }
 
-
-/**
- * Generate and display printable report
- */
 /**
  * Generate and display printable report with full remarks history
  */
@@ -769,6 +749,54 @@ public function report() {
 }
 
 
+/**
+ * Public report view - No authentication required
+ */
+public function publicReport() {
+    // Allow public access - no authentication check
+    
+    // Load required models
+    require_once __DIR__ . '/../models/Task.php';
+    require_once __DIR__ . '/../models/Project.php';
+    
+    $taskModel = new Task();
+    $projectModel = new Project();
+    
+    // Get filter parameters
+    $selected_year = $_GET['year'] ?? date('Y');
+    $selected_division = $_GET['division'] ?? '';
+    $selected_status = $_GET['status'] ?? '';
+    $selected_priority = $_GET['priority'] ?? '';
+    
+    // Build filters
+    $filters = ['year' => $selected_year];
+    if (!empty($selected_division)) {
+        $filters['functional_division'] = $selected_division;
+    }
+    if (!empty($selected_status)) {
+        $filters['status'] = $selected_status;
+    }
+    if (!empty($selected_priority)) {
+        $filters['priority'] = $selected_priority;
+    }
+    
+    // Get tasks with filters
+    $tasks = $taskModel->getAllTasks($filters);
+    
+    // Get current date for the report
+    $current_date = date('F d, Y');
+    
+    // Pass variables to view
+    $selected_year = $selected_year;
+    $selected_division = $selected_division;
+    $selected_status = $selected_status;
+    $selected_priority = $selected_priority;
+    $tasks = $tasks;
+    $current_date = $current_date;
+    
+    // Load the report view (without header/footer for clean printing)
+    require_once 'views/tasks/public_report.php';
+}
     
 }
 ?>

@@ -61,5 +61,46 @@ class PublicController {
         $error = isset($_GET['error']) ? $_GET['error'] : '';
         require_once __DIR__ . '/../views/auth/login.php';
     }
+
+
+    public function report() {
+    // Get filter parameters
+    $selected_year = $_GET['year'] ?? date('Y');
+    $selected_division = $_GET['division'] ?? '';
+    $selected_status = $_GET['status'] ?? '';
+    $selected_priority = $_GET['priority'] ?? '';
+    
+    // Build filters for tasks
+    $filters = ['year' => $selected_year];
+    if (!empty($selected_division)) {
+        $filters['functional_division'] = $selected_division;
+    }
+    
+    // Get tasks with filters
+    $tasks = $this->task->getAllTasks($filters);
+    
+    // Manual filtering for status and priority since getAllTasks might not support these
+    if (!empty($selected_status)) {
+        $tasks = array_filter($tasks, function($task) use ($selected_status) {
+            $percentage = $task['current_percentage'] ?? 0;
+            if ($selected_status == 'completed') return $percentage >= 100;
+            if ($selected_status == 'in_progress') return $percentage > 0 && $percentage < 100;
+            if ($selected_status == 'not_started') return $percentage == 0;
+            return true;
+        });
+    }
+    
+    if (!empty($selected_priority)) {
+        $tasks = array_filter($tasks, function($task) use ($selected_priority) {
+            return isset($task['priority']) && $task['priority'] == $selected_priority;
+        });
+    }
+    
+    // Get current date for the report
+    $current_date = date('F d, Y');
+    
+    // Load the report view
+    require_once __DIR__ . '/../views/tasks/public_report.php';
+}
 }
 ?>
