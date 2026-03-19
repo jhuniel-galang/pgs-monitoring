@@ -29,9 +29,9 @@
                 }
                 
                 // Determine permissions
-                $canUpdate = false; // For progress updates
-                $canEdit = false;    // For editing task details
-                $canDelete = false;   // For deleting tasks
+                $canUpdate = true; // For progress updates
+                $canEdit = true;    // For editing task details
+                $canDelete = true;   // For deleting tasks
                 
                 if($_SESSION['role'] == 'admin') {
                     $canUpdate = true;

@@ -542,15 +542,34 @@ public function createPage() {
 public function delete() {
     if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $this->auth->getCurrentUser();
+        $task_id = $_POST['task_id'];
         
-        // Only admin can delete
-        if($user['role'] != 'admin') {
-            $_SESSION['error'] = "Unauthorized access";
+        // Get task details to check division
+        $task = $this->task->getTaskById($task_id);
+        
+        if(!$task) {
+            $_SESSION['error'] = "Task not found";
             header("Location: index.php?action=tasks");
             exit();
         }
         
-        $task_id = $_POST['task_id'];
+        // Check permissions:
+        // - Admin can delete any task
+        // - Encoder can only delete tasks in their own division
+        if($user['role'] == 'admin') {
+            // Admin allowed
+        } elseif($user['role'] == 'encoder') {
+            // Check if task belongs to encoder's division
+            if(!isset($task['functional_division']) || $task['functional_division'] != $user['functional_division']) {
+                $_SESSION['error'] = "You don't have permission to delete tasks from other divisions";
+                header("Location: index.php?action=tasks");
+                exit();
+            }
+        } else {
+            $_SESSION['error'] = "Unauthorized access";
+            header("Location: index.php?action=tasks");
+            exit();
+        }
         
         $result = $this->task->deleteTask($task_id);
         
@@ -565,22 +584,33 @@ public function delete() {
     }
 }
 
-// Show edit task page
+// Show edit task page - UPDATED to allow encoders to edit their own division's tasks
 public function editPage($task_id) {
     $user = $this->auth->getCurrentUser();
     
-    // Only admin can edit task details
-    if($user['role'] != 'admin') {
-        $_SESSION['error'] = "Unauthorized access";
-        header("Location: index.php?action=tasks");
-        exit();
-    }
-    
-    // Get task details
+    // Get task details first to check division
     $task = $this->task->getTaskWithUnits($task_id);
     
     if(!$task) {
         $_SESSION['error'] = "Task not found";
+        header("Location: index.php?action=tasks");
+        exit();
+    }
+    
+    // Check permissions:
+    // - Admin can edit any task
+    // - Encoder can only edit tasks in their own division
+    if($user['role'] == 'admin') {
+        // Admin allowed
+    } elseif($user['role'] == 'encoder') {
+        // Check if task belongs to encoder's division
+        if(!isset($task['functional_division']) || $task['functional_division'] != $user['functional_division']) {
+            $_SESSION['error'] = "You don't have permission to edit tasks from other divisions";
+            header("Location: index.php?action=tasks");
+            exit();
+        }
+    } else {
+        $_SESSION['error'] = "Unauthorized access";
         header("Location: index.php?action=tasks");
         exit();
     }
@@ -596,19 +626,38 @@ public function editPage($task_id) {
     require_once __DIR__ . '/../views/tasks/edit.php';
 }
 
-// Update task details (not progress)
+// Update task details (not progress) - UPDATED to allow encoders
 public function updateTask() {
     if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $this->auth->getCurrentUser();
+        $task_id = $_POST['task_id'];
         
-        // Only admin can update task details
-        if($user['role'] != 'admin') {
-            $_SESSION['error'] = "Unauthorized access";
+        // Get task details to check division
+        $task = $this->task->getTaskById($task_id);
+        
+        if(!$task) {
+            $_SESSION['error'] = "Task not found";
             header("Location: index.php?action=tasks");
             exit();
         }
         
-        $task_id = $_POST['task_id'];
+        // Check permissions:
+        // - Admin can update any task
+        // - Encoder can only update tasks in their own division
+        if($user['role'] == 'admin') {
+            // Admin allowed
+        } elseif($user['role'] == 'encoder') {
+            // Check if task belongs to encoder's division
+            if(!isset($task['functional_division']) || $task['functional_division'] != $user['functional_division']) {
+                $_SESSION['error'] = "You don't have permission to update tasks from other divisions";
+                header("Location: index.php?action=tasks");
+                exit();
+            }
+        } else {
+            $_SESSION['error'] = "Unauthorized access";
+            header("Location: index.php?action=tasks");
+            exit();
+        }
         
         // Validate input
         if(empty($_POST['task_details'])) {
@@ -619,6 +668,13 @@ public function updateTask() {
         
         if(empty($_POST['functional_division'])) {
             $_SESSION['error'] = "Division is required";
+            header("Location: index.php?action=edit_task_page&id=" . $task_id);
+            exit();
+        }
+        
+        // For encoders, ensure they're not changing the division
+        if($user['role'] == 'encoder' && $_POST['functional_division'] != $user['functional_division']) {
+            $_SESSION['error'] = "You cannot change the division of a task";
             header("Location: index.php?action=edit_task_page&id=" . $task_id);
             exit();
         }
@@ -672,14 +728,34 @@ public function updateTask() {
 public function deleteDirect($task_id) {
     $user = $this->auth->getCurrentUser();
     
-    // Only admin can delete
-    if($user['role'] != 'admin') {
+    // Get task details to check division
+    $task = $this->task->getTaskById($task_id);
+    
+    if(!$task) {
+        $_SESSION['error'] = "Task not found";
+        header("Location: index.php?action=tasks");
+        exit();
+    }
+    
+    // Check permissions:
+    // - Admin can delete any task
+    // - Encoder can only delete tasks in their own division
+    if($user['role'] == 'admin') {
+        // Admin allowed
+    } elseif($user['role'] == 'encoder') {
+        // Check if task belongs to encoder's division
+        if(!isset($task['functional_division']) || $task['functional_division'] != $user['functional_division']) {
+            $_SESSION['error'] = "You don't have permission to delete tasks from other divisions";
+            header("Location: index.php?action=tasks");
+            exit();
+        }
+    } else {
         $_SESSION['error'] = "Unauthorized access";
         header("Location: index.php?action=tasks");
         exit();
     }
     
-    error_log("deleteDirect called for task_id: " . $task_id);
+    error_log("deleteDirect called for task_id: " . $task_id . " by user: " . $user['username'] . " role: " . $user['role']);
     
     $result = $this->task->deleteTask($task_id);
     
@@ -696,6 +772,9 @@ public function deleteDirect($task_id) {
 /**
  * Generate and display printable report with full remarks history
  */
+/**
+ * Generate and display printable report with full remarks history
+ */
 public function report() {
     $user = $this->auth->getCurrentUser();
     
@@ -709,14 +788,19 @@ public function report() {
     // Build filters for tasks
     $filters = [
         'year' => $selected_year,
-        'division' => $selected_division,
         'priority' => $selected_priority,
         'project_id' => $selected_project
     ];
     
     // Add role-based filter for encoders
     if($user['role'] == 'encoder') {
+        // Force encoder to only see their division
         $filters['division'] = $user['functional_division'];
+        // Also set selected_division for display purposes
+        $selected_division = $user['functional_division'];
+    } else {
+        // Admin can filter by division
+        $filters['division'] = $selected_division;
     }
     
     // Get tasks with full status history using the new method
@@ -733,10 +817,12 @@ public function report() {
         });
     }
     
-    // Get projects for filter dropdown
-    require_once __DIR__ . '/../models/Project.php';
-    $projectModel = new Project();
-    $projects = $projectModel->getProjectsForDropdown();
+    // Get projects for filter dropdown (only if admin)
+    if($user['role'] == 'admin') {
+        require_once __DIR__ . '/../models/Project.php';
+        $projectModel = new Project();
+        $projects = $projectModel->getProjectsForDropdown();
+    }
     
     // Get all units for reference
     $units = $this->unit->getAllUnits();

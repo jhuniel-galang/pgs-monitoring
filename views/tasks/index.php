@@ -28,27 +28,47 @@
         <?php endif; ?>
     </div>
     <div class="col-md-4 text-end">
-        <div class="btn-group" role="group">
-            <?php if(isset($_SESSION['role']) && ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'encoder')): ?>
-            <a href="index.php?action=create_task_page" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Create New Commitment
-            </a>
-            <?php endif; ?>
+    <div class="btn-group" role="group">
+        <?php if(isset($_SESSION['role']) && ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'encoder')): ?>
+        <a href="index.php?action=create_task_page" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Commitment
+        </a>
+        <?php endif; ?>
+        
+        <?php if(isset($_SESSION['role']) && ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'encoder')): ?>
+        <?php 
+            // Build the URL properly
+            $base_url = "index.php?action=task_report";
+            $params = [];
             
-            <?php if(isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
-            <a href="index.php?action=task_report<?php 
-                // Preserve current filters in the report
-                $report_params = [];
-                if(!empty($_GET['year'])) $report_params[] = 'year=' . urlencode($_GET['year']);
-                if(!empty($_GET['division'])) $report_params[] = 'division=' . urlencode($_GET['division']);
-                if(!empty($_GET['priority'])) $report_params[] = 'priority=' . urlencode($_GET['priority']);
-                if(!empty($_GET['status'])) $report_params[] = 'status=' . urlencode($_GET['status']);
-                echo !empty($report_params) ? '?' . implode('&', $report_params) : '';
-            ?>" class="btn btn-success" target="_blank">
-                <i class="bi bi-printer"></i> Print Report
-            </a>
+            if(!empty($_GET['year'])) {
+                $params[] = 'year=' . urlencode($_GET['year']);
+            }
+            
+            // For encoders, force their division
+            if($_SESSION['role'] == 'encoder') {
+                $params[] = 'division=' . urlencode($_SESSION['functional_division']);
+            } elseif($_SESSION['role'] == 'admin' && !empty($_GET['division'])) {
+                $params[] = 'division=' . urlencode($_GET['division']);
+            }
+            
+            if(!empty($_GET['priority'])) {
+                $params[] = 'priority=' . urlencode($_GET['priority']);
+            }
+            
+            if(!empty($_GET['status'])) {
+                $params[] = 'status=' . urlencode($_GET['status']);
+            }
+            
+            $report_url = $base_url . (!empty($params) ? '&' . implode('&', $params) : '');
+        ?>
+        <a href="<?php echo $report_url; ?>" class="btn btn-success" target="_blank">
+            <i class="bi bi-printer"></i> Print Report
+            <?php if($_SESSION['role'] == 'encoder'): ?>
+                <small class="ms-1">(<?php echo $_SESSION['functional_division']; ?>)</small>
             <?php endif; ?>
-        </div>
+        </a>
+        <?php endif; ?>
     </div>
 </div>
 
